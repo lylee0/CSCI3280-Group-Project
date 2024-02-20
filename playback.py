@@ -6,19 +6,23 @@ import wave
 def readSound():
     return
 
-def playSound(file_path):
+def playRecording(file_path):
     voice = sound(file_path)
-    voice.playSound()
+    voice.playSound(speed=1)
     return
 
 def pause():
     # resume
     return
 
-def doubleSpeed():
+def doubleSpeed(file_path):
+    voice = sound(file_path)
+    voice.playSound(speed=2)
     return
 
-def halfSpeed():
+def halfSpeed(file_path):
+    voice = sound(file_path)
+    voice.playSound(speed=0.5)
     return
 
 def voulume():
@@ -72,19 +76,20 @@ class sound():
         #return np.frombuffer(self.data, dtype=np.int16)
         return np.array(audio)
 
-    def playSound(self):
+    def playSound(self, speed=1):
         self.verify()
         # Create an instance of the PyAudio class
         '''pygame.mixer.init(self.sample_rate, -self.bits_per_sample, self.num_channels, 1024)
         # load audio_array into mixer
         return pygame.mixer.Sound(self.getData())'''
-        sd.play(self.getData(), samplerate=self.sample_rate)
+        sd.play(self.getData(), samplerate=self.sample_rate*speed)
         sd.wait()
-
 
 if __name__ == "__main__":
     #pygame.init()
-    playSound("test.wav")
+    playRecording("test.wav")
+    doubleSpeed("test.wav")
+    halfSpeed("test.wav")
     #voice = sound("test.wav")
     #voice.verify()
     #print(voice.subChunkSize_2)
@@ -94,4 +99,3 @@ if __name__ == "__main__":
         continue
     pygame.quit()'''
     # Play the raw audio data
-        
