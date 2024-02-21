@@ -1,9 +1,17 @@
 import numpy as np
 import pyaudio
+import sys
+
+def getPyAudio():
+    global p
+    p = pyaudio.PyAudio()
 
 def playRecording(file_path, speed=1):
     voice = sound(file_path, speed)
     voice.playSound()
+    
+def stop():
+    p.terminate()
 
 class sound():
     def __init__(self, file_path, speed=1):
@@ -46,19 +54,25 @@ class sound():
         return np.array(audio, dtype=np.int32) 
 
     def playSound(self):
-        p = pyaudio.PyAudio()
-        self.stream = p.open(format=pyaudio.paInt32,
-                channels=self.num_channels,
-                rate=int(self.sample_rate * self.speed),
-                output=True)
+        try:
+            self.stream = p.open(format=pyaudio.paInt32,
+                    channels=self.num_channels,
+                    rate=int(self.sample_rate * self.speed),
+                    output=True)
+        except OSError:
+            sys.exit(0)
+
         self.stream.write(self.data)
         self.stream.stop_stream()
         self.stream.close()
-        p.terminate()
 
 if __name__ == "__main__":
+    # call getPyAudio before play
     # press the button to select the value of speed
     # press the play button to play the audio
+    # press the stop button to stop
+    getPyAudio()
     playRecording("test.wav", 1)
     playRecording("test.wav", 2)
     playRecording("test.wav", 0.5)
+    stop()
