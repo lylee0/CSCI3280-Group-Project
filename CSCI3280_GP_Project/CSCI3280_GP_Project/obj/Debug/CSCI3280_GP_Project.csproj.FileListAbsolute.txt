@@ -1,0 +1,10 @@
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\bin\Debug\CSCI3280_GP_Project.exe.config
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\bin\Debug\CSCI3280_GP_Project.exe
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\bin\Debug\CSCI3280_GP_Project.pdb
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.csproj.AssemblyReference.cache
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.Form1.resources
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.Properties.Resources.resources
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.csproj.GenerateResource.cache
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.csproj.CoreCompileInputs.cache
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.exe
+D:\Develop\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.pdb
