@@ -97,19 +97,19 @@ class sound():
     def changeVolume(self, new_volume):
         self.pause()
         old_volume = self.volume
-        self.dataArray = np.multiply(self.dataArray, int(new_volume/old_volume)).astype(np.int32)
         self.volume = new_volume
+        self.dataArray = np.multiply(self.dataArray, int(new_volume/old_volume)).astype(np.int32)
         self.playSound()
 
     def changeSpeed(self, new_speed):
         self.pause()
         try:
             old_speed = self.speed
+            self.speed = new_speed
             self.stream = p.open(format=pyaudio.paInt32,
             channels=self.num_channels,
             rate=int(self.sample_rate * int(new_speed/old_speed)),
             output=True)
-            self.speed = new_speed
             self.playSound()
         except OSError:
             sys.exit(0)       
