@@ -5,14 +5,6 @@ def playRecording(file_path, speed=1):
     voice = sound(file_path, speed)
     voice.playSound()
 
-def doubleSpeed(file_path, speed=2):
-    voice = sound(file_path, speed)
-    voice.playSound()
-
-def halfSpeed(file_path, speed=0.5):
-    voice = sound(file_path, speed)
-    voice.playSound()
-
 class sound():
     def __init__(self, file_path, speed=1):
         self.file_path = file_path
@@ -65,6 +57,8 @@ class sound():
         p.terminate()
 
 if __name__ == "__main__":
-    playRecording("test.wav")
-    doubleSpeed("test.wav")
-    halfSpeed("test.wav")
+    # press the button to select the value of speed
+    # press the play button to play the audio
+    playRecording("test.wav", 1)
+    playRecording("test.wav", 2)
+    playRecording("test.wav", 0.5)
