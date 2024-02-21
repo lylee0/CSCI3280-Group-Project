@@ -9,6 +9,7 @@ def getPyAudio():
 def playRecording(file_path, speed=1, volume=1):
     voice = sound(file_path, speed, volume)
     voice.playSound()
+    voice.stop()
     
 def stop():
     p.terminate()
@@ -63,10 +64,10 @@ class sound():
         except OSError:
             sys.exit(0)
 
-        #self.stream.write(self.data)
-        #self.stream.write(self.getData())
         data = self.getData()
         self.stream.write(data.astype(np.int32).tobytes())
+
+    def stop(self):
         self.stream.stop_stream()
         self.stream.close()
 
