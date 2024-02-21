@@ -84,7 +84,7 @@ class sound():
         return
 
     def getMixer(self, speed=1):
-        pygame.mixer.init(int(self.sample_rate*speed//2), -self.bits_per_sample, self.num_channels, 1024)
+        pygame.mixer.init(int(self.sample_rate*speed*2), -self.bits_per_sample, self.num_channels, 1024)
         return pygame.mixer.Sound(self.getData())
 
 if __name__ == "__main__":
