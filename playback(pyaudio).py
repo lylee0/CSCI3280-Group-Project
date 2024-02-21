@@ -7,19 +7,18 @@ def getPyAudio():
     p = pyaudio.PyAudio()
 
 def playRecording(file_path, speed=1, volume=1):
-    voice = sound(file_path, speed, volume)
+    voice = sound(file_path, speed)
+    voice.changeVolume(volume)
     voice.playSound()
-    voice.changeVolume()
     voice.stop()
     
 def stop():
     p.terminate()
 
 class sound():
-    def __init__(self, file_path, speed=1, volume=1):
+    def __init__(self, file_path, speed=1):
         self.file_path = file_path
         self.speed = speed
-        self.volume = volume
         if file_path[-4:] == ".wav":
             with open(self.file_path, "rb") as recording:
                 self.chunk_id = recording.read(4) #"RIFF"
@@ -60,12 +59,12 @@ class sound():
         for i in range(0, len(self.data), self.block_align):
             sample = []
             for j in range(self.num_channels):
-                sample.append(int(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True) * self.volume))
+                sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
             audio.append(sample)   
         return np.array(audio, dtype=np.int32) 
 
-    def changeVolume(self):
-        self.dataArray = np.multiply(self.dataArray, self.volume).astype(np.int32)
+    def changeVolume(self, volume):
+        self.dataArray = np.multiply(self.dataArray, volume).astype(np.int32)
 
     def playSound(self):
         self.stream.write(self.dataArray.astype(np.int32).tobytes())
