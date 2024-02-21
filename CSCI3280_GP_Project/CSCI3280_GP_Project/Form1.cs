@@ -16,6 +16,10 @@ namespace CSCI3280_GP_Project
         {
             InitializeComponent();
 
+            //Set Default to 1x
+            playSpeedDropDown.SelectedIndex = 2;
+
+            //For testing
             for (int i = 0; i < 100; i++) 
             {
                 Button button = new Button();
@@ -25,7 +29,7 @@ namespace CSCI3280_GP_Project
                 recordingContents.Controls.Add(button);
             }
 
-
+            
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -47,7 +51,16 @@ namespace CSCI3280_GP_Project
         {
 
         }
+        
 
+        private void playSpeedDropDown_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+
+
+        //For testing
         public void ButtonClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
