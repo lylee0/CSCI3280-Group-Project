@@ -7,7 +7,8 @@ def getPyAudio():
     p = pyaudio.PyAudio()
 
 def playRecording(file_path, speed=1, volume=1):
-    voice = sound(file_path, speed)
+    voice = sound(file_path)
+    voice.changeSpeed(speed)
     voice.changeVolume(volume)
     voice.playSound()
     voice.stop()
@@ -16,9 +17,8 @@ def stop():
     p.terminate()
 
 class sound():
-    def __init__(self, file_path, speed=1):
+    def __init__(self, file_path):
         self.file_path = file_path
-        self.speed = speed
         if file_path[-4:] == ".wav":
             with open(self.file_path, "rb") as recording:
                 self.chunk_id = recording.read(4) #"RIFF"
@@ -42,15 +42,9 @@ class sound():
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
                 recording.close()
+
                 # Here are the variables for editting
                 self.dataArray = self.getData()
-                try:
-                    self.stream = p.open(format=pyaudio.paInt32,
-                            channels=self.num_channels,
-                            rate=int(self.sample_rate * self.speed),
-                            output=True)
-                except OSError:
-                    sys.exit(0)
         else:
             raise ValueError('Wrong file name.')
     
@@ -62,6 +56,15 @@ class sound():
                 sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
             audio.append(sample)   
         return np.array(audio, dtype=np.int32) 
+
+    def changeSpeed(self, speed):
+        try:
+            self.stream = p.open(format=pyaudio.paInt32,
+            channels=self.num_channels,
+            rate=int(self.sample_rate * speed),
+            output=True)
+        except OSError:
+            sys.exit(0)
 
     def changeVolume(self, volume):
         self.dataArray = np.multiply(self.dataArray, volume).astype(np.int32)
