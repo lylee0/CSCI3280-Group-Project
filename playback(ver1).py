@@ -47,7 +47,6 @@ class sound():
                 self.subChunkID_2 = recording.read(4) #"LIST", "data"
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
-                #self.data = recording.read(self.chunk_size-36) #little
                 recording.close()
         else:
             raise ValueError('Wrong file name.')
@@ -68,11 +67,6 @@ class sound():
                 sample.append(value)
             audio.append(sample)
 
-        # Print the audio data
-        '''for sample in audio:
-            print(sample)'''
-        #dt = np.dtype(np.int16)
-        #dt = dt.newbyteorder('<')
         #return np.frombuffer(self.data, dtype=np.int16)
         return np.array(audio)
 
@@ -86,16 +80,6 @@ class sound():
         sd.wait()
 
 if __name__ == "__main__":
-    #pygame.init()
     playRecording("test.wav")
     doubleSpeed("test.wav")
     halfSpeed("test.wav")
-    #voice = sound("test.wav")
-    #voice.verify()
-    #print(voice.subChunkSize_2)
-    '''obj = voice.playSound()
-    obj.play()
-    while(pygame.mixer.get_busy()):
-        continue
-    pygame.quit()'''
-    # Play the raw audio data
