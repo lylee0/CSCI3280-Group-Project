@@ -1,32 +1,18 @@
 import numpy as np
 import sounddevice as sd
-from pydub import AudioSegment
-import wave
 
-def readSound():
-    return
-
+# can change volume
 def playRecording(file_path):
     voice = sound(file_path)
-    voice.playSound(speed=1)
-    return
-
-def pause():
-    # resume
-    return
+    voice.playSound(speed=1, volume=1)
 
 def doubleSpeed(file_path):
     voice = sound(file_path)
-    voice.playSound(speed=2)
-    return
+    voice.playSound(speed=2, volume=1)
 
 def halfSpeed(file_path):
     voice = sound(file_path)
-    voice.playSound(speed=0.5)
-    return
-
-def voulume():
-    return
+    voice.playSound(speed=0.5, volume=1)
 
 class sound():
     def __init__(self, file_path):
@@ -36,27 +22,26 @@ class sound():
                 self.chunk_id = recording.read(4) #"RIFF"
                 self.chunk_size = int.from_bytes(recording.read(4), byteorder='little') #little, N+36
                 self.format = recording.read(4) #"WAVE"
+                if (self.chunk_id != b'RIFF') or (self.format != b'WAVE'):
+                    raise ValueError('File is not in WAV format.')
                 self.subChunkID_1 = recording.read(4) #"fmt "
                 self.subChunkSize_1 = int.from_bytes(recording.read(4), byteorder='little') #little, 16
                 self.audio_format = int.from_bytes(recording.read(2), byteorder='little') #little, PCM
+                if self.audio_format != 1:
+                    raise ValueError('File is not in PCM format.')
                 self.num_channels = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.sample_rate = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.byte_rate = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.block_align = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.bits_per_sample = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.subChunkID_2 = recording.read(4) #"LIST", "data"
+                if self.subChunkID_2 != b'data':
+                    raise ValueError('Invalid WAV file.')
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
                 recording.close()
         else:
             raise ValueError('Wrong file name.')
-        
-    def verify(self):
-        if (self.chunk_id != b'RIFF') or (self.format != b'WAVE'):
-            raise ValueError('File is not in WAV format.')
-        if self.audio_format != 1:
-            raise ValueError('File is not in PCM format.')
-        return
     
     def getData(self):
         audio = []
@@ -67,16 +52,10 @@ class sound():
                 sample.append(value)
             audio.append(sample)
 
-        #return np.frombuffer(self.data, dtype=np.int16)
-        return np.array(audio)
+        return np.array(audio, dtype=np.int32)
 
-    def playSound(self, speed=1):
-        self.verify()
-        # Create an instance of the PyAudio class
-        '''pygame.mixer.init(self.sample_rate, -self.bits_per_sample, self.num_channels, 1024)
-        # load audio_array into mixer
-        return pygame.mixer.Sound(self.getData())'''
-        sd.play(self.getData(), samplerate=self.sample_rate*speed)
+    def playSound(self, speed=1, volume=1):
+        sd.play((self.getData())*volume, samplerate=self.sample_rate*speed)
         sd.wait()
 
 if __name__ == "__main__":
