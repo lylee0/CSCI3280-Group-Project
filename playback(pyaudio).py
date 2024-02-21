@@ -6,17 +6,18 @@ def getPyAudio():
     global p
     p = pyaudio.PyAudio()
 
-def playRecording(file_path, speed=1):
-    voice = sound(file_path, speed)
+def playRecording(file_path, speed=1, volume=1):
+    voice = sound(file_path, speed, volume)
     voice.playSound()
     
 def stop():
     p.terminate()
 
 class sound():
-    def __init__(self, file_path, speed=1):
+    def __init__(self, file_path, speed=1, volume=1):
         self.file_path = file_path
         self.speed = speed
+        self.volume = volume
         if file_path[-4:] == ".wav":
             with open(self.file_path, "rb") as recording:
                 self.chunk_id = recording.read(4) #"RIFF"
@@ -48,7 +49,7 @@ class sound():
         for i in range(0, len(self.data), self.block_align):
             sample = []
             for j in range(self.num_channels):
-                sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                sample.append(int(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True) * self.volume))
             audio.append(sample)
         
         return np.array(audio, dtype=np.int32) 
@@ -62,7 +63,10 @@ class sound():
         except OSError:
             sys.exit(0)
 
-        self.stream.write(self.data)
+        #self.stream.write(self.data)
+        #self.stream.write(self.getData())
+        data = self.getData()
+        self.stream.write(data.astype(np.int32).tobytes())
         self.stream.stop_stream()
         self.stream.close()
 
@@ -71,8 +75,10 @@ if __name__ == "__main__":
     # press the button to select the value of speed
     # press the play button to play the audio
     # press the stop button to stop
+    # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
-    playRecording("test.wav", 1)
-    playRecording("test.wav", 2)
-    playRecording("test.wav", 0.5)
+    volume = 1
+    playRecording("test.wav", 1, volume)
+    playRecording("test.wav", 2, volume)
+    playRecording("test.wav", 0.5, volume)
     stop()
