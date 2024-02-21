@@ -6,18 +6,41 @@ def getPyAudio():
     global p
     p = pyaudio.PyAudio()
 
-def playRecording(file_path, speed=1):
-    voice = sound(file_path, speed)
-    voice.playSound()
-    voice.stop()
-    
 def stop():
     p.terminate()
 
+def playRecording(file_path, speed=1, volume=1):
+    # for testing
+    voice = sound(file_path)
+
+    # To play
+    voice.changeSpeed(speed)
+    voice.changeVolume(volume)
+    voice.playSound()    
+
+    # To change speed 
+    voice.pause()
+    voice.changeSpeed(speed)
+    voice.playSound()
+
+    # To change volume
+    voice.pause()
+    voice.changeVolume(volume)
+    voice.playSound()
+
+    # To pause
+    voice.pause()
+
+    # To unpause
+    voice.playSound()
+
+    # To replay
+    voice.replay(speed, volume)
+    voice.stop()
+    
 class sound():
-    def __init__(self, file_path, speed=1):
+    def __init__(self, file_path):
         self.file_path = file_path
-        self.speed = speed
         if file_path[-4:] == ".wav":
             with open(self.file_path, "rb") as recording:
                 # Here are the original information
@@ -45,13 +68,6 @@ class sound():
 
                 # Here are the variables for editting
                 self.dataArray = self.getData()
-                try:
-                    self.stream = p.open(format=pyaudio.paInt32,
-                            channels=self.num_channels,
-                            rate=int(self.sample_rate * self.speed),
-                            output=True)
-                except OSError:
-                    sys.exit(0)
         else:
             raise ValueError('Wrong file name.')
     
@@ -67,6 +83,15 @@ class sound():
     def changeVolume(self, volume):
         self.dataArray = np.multiply(self.dataArray, volume).astype(np.int32)
 
+    def changeSpeed(self, speed):
+        try:
+            self.stream = p.open(format=pyaudio.paInt32,
+            channels=self.num_channels,
+            rate=int(self.sample_rate * speed),
+            output=True)
+        except OSError:
+            sys.exit(0)
+
     def playSound(self):
         # or unpause
         CHUNK = 1024
@@ -81,6 +106,14 @@ class sound():
         self.stream.stop_stream()
         self.stream.close()
 
+    def replay(self, speed=1, volume=1):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.dataArray = self.getData()
+        self.changeSpeed(speed)
+        self.changeVolume(volume)
+        self.playSound()
+
 if __name__ == "__main__":
     # call getPyAudio before play
     # press the button to select the value of speed
@@ -88,7 +121,8 @@ if __name__ == "__main__":
     # press the stop button to stop
     # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
-    playRecording("test.wav", 1)
-    playRecording("test.wav", 2)
-    playRecording("test.wav", 0.5)
+    volume = 2
+    playRecording("test.wav", 1, volume)
+    playRecording("test.wav", 2, volume)
+    playRecording("test.wav", 0.5, volume)
     stop()
