@@ -9,6 +9,7 @@ def getPyAudio():
 def playRecording(file_path, speed=1, volume=1):
     voice = sound(file_path, speed, volume)
     voice.playSound()
+    voice.changeVolume()
     voice.stop()
     
 def stop():
@@ -42,6 +43,15 @@ class sound():
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
                 recording.close()
+                # Here are the variables for editting
+                self.dataArray = self.getData()
+                try:
+                    self.stream = p.open(format=pyaudio.paInt32,
+                            channels=self.num_channels,
+                            rate=int(self.sample_rate * self.speed),
+                            output=True)
+                except OSError:
+                    sys.exit(0)
         else:
             raise ValueError('Wrong file name.')
     
@@ -51,21 +61,14 @@ class sound():
             sample = []
             for j in range(self.num_channels):
                 sample.append(int(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True) * self.volume))
-            audio.append(sample)
-        
+            audio.append(sample)   
         return np.array(audio, dtype=np.int32) 
 
-    def playSound(self):
-        try:
-            self.stream = p.open(format=pyaudio.paInt32,
-                    channels=self.num_channels,
-                    rate=int(self.sample_rate * self.speed),
-                    output=True)
-        except OSError:
-            sys.exit(0)
+    def changeVolume(self):
+        self.dataArray = np.multiply(self.dataArray, self.volume).astype(np.int32)
 
-        data = self.getData()
-        self.stream.write(data.astype(np.int32).tobytes())
+    def playSound(self):
+        self.stream.write(self.dataArray.astype(np.int32).tobytes())
 
     def stop(self):
         self.stream.stop_stream()
@@ -78,7 +81,7 @@ if __name__ == "__main__":
     # press the stop button to stop
     # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
-    volume = 1
+    volume = 2
     playRecording("test.wav", 1, volume)
     playRecording("test.wav", 2, volume)
     playRecording("test.wav", 0.5, volume)
