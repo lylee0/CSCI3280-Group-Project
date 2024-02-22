@@ -67,8 +67,9 @@ class sound():
                     raise ValueError('Invalid WAV file.')
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
-                recording.close()                
-                self.stream = self.getStream()
+                recording.close()      
+                          
+                self.stream = self.getStream() # define stream
                 self.dataArray = self.getData(1) # original data in numpy array
 
                 # Here are the variables for editting
@@ -136,10 +137,9 @@ class sound():
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
-        CHUNK = 2#1024
+        CHUNK = 2
         data = np.multiply(self.dataNormal, volume).astype(np.int32)
         while data.size != 0:
-            #self.stream.write(self.dataNormal[:CHUNK].astype(np.int32).tobytes())
             self.stream.write(data[:CHUNK].astype(np.int32).tobytes())
             data = data[CHUNK:]
             self.dataNormal = self.dataNormal[CHUNK:]
@@ -150,7 +150,7 @@ class sound():
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
-        CHUNK = 2#1024
+        CHUNK = 2
         data = np.multiply(self.dataDouble, volume).astype(np.int32)
         while data.size != 0:
             self.stream.write(data[:int(CHUNK/2)].astype(np.int32).tobytes())
@@ -163,7 +163,7 @@ class sound():
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
-        CHUNK = 2#1024
+        CHUNK = 2
         data = np.multiply(self.dataHalf, volume).astype(np.int32)
         while data.size != 0:
             self.stream.write(data[:(CHUNK*2)].astype(np.int32).tobytes())
