@@ -79,7 +79,7 @@ class sound():
         else:
             raise ValueError('Wrong file name.')
     
-    def getData(self, speed):
+    def getData(self, speed=1):
         if speed == 1:
             audio = []
             for i in range(0, len(self.data), self.block_align):
@@ -120,7 +120,7 @@ class sound():
         except OSError:
             sys.exit(0)
 
-    def playSound(self, speed, volume):
+    def playSound(self, speed=1, volume=1):
         # or unpause
         self.speed = speed
         self.volume = volume
@@ -133,7 +133,7 @@ class sound():
         else:
             raise ValueError('Invalid speed.')
 
-    def normalSpeed(self, volume):
+    def normalSpeed(self, volume=1):
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
@@ -146,7 +146,7 @@ class sound():
             self.dataDouble = self.dataDouble[int(CHUNK/2):]
             self.dataHalf = self.dataHalf[(CHUNK*2):]
 
-    def doubleSpeed(self, volume):
+    def doubleSpeed(self, volume=1):
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
@@ -159,7 +159,7 @@ class sound():
             self.dataDouble = self.dataDouble[int(CHUNK/2):]
             self.dataHalf = self.dataHalf[(CHUNK*2):]
 
-    def halfSpeed(self, volume):
+    def halfSpeed(self, volume=1):
         if self.stream.is_active:
             self.pause()
             self.stream = self.getStream()
@@ -179,7 +179,7 @@ class sound():
         self.stream.stop_stream()
         self.stream.close()
 
-    def replay(self, speed, volume):
+    def replay(self, speed=1, volume=1):
         self.speed = speed
         self.volume = volume
         self.stream.stop_stream()
