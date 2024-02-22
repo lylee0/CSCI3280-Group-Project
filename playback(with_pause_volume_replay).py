@@ -16,22 +16,23 @@ def playRecording(file_path, speed=1, volume=1):
     voice = sound(file_path, speed, volume)
 
     # To play
-    voice.playSound()    
+    voice.playSound(speed, volume)    
 
     # To change speed 
-    voice.changeSpeed(2)
+    '''voice.playSound(2, volume)
 
     # To change volume
-    voice.changeVolume(3)
+    voice.playSound(speed, 2)
 
     # To pause
     voice.pause()
 
     # To unpause
-    voice.playSound()
+    voice.playSound(speed, volume)'''
 
     # To replay
-    voice.replay()
+    #voice.replay(1, 1)
+    voice.replay(speed, volume)
 
     # To stop???
     voice.stop()
@@ -56,6 +57,8 @@ class sound():
                     raise ValueError('File is not in PCM format.')
                 self.num_channels = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.sample_rate = int.from_bytes(recording.read(4), byteorder='little') #little
+                '''if self.sample_rate != 44100:
+                    raise ValueError('Sampling Rate is not Supported.')'''
                 self.byte_rate = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.block_align = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.bits_per_sample = int.from_bytes(recording.read(2), byteorder='little') #little
@@ -64,62 +67,110 @@ class sound():
                     raise ValueError('Invalid WAV file.')
                 self.subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.data = recording.read(self.subChunkSize_2) #little
-                recording.close()
+                recording.close()                
+                self.stream = self.getStream()
+                self.dataArray = self.getData(1) # original data in numpy array
 
                 # Here are the variables for editting
-                self.dataArray = self.setVolume()
-                self.stream = self.setSpeed()
+                self.dataNormal = self.getData(1)
+                self.dataDouble = self.getData(2)
+                self.dataHalf = self.getData(0.5)
         else:
             raise ValueError('Wrong file name.')
     
-    def getData(self):
-        audio = []
-        for i in range(0, len(self.data), self.block_align):
-            sample = []
-            for j in range(self.num_channels):
-                sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
-            audio.append(sample)
-        return np.array(audio, dtype=np.int32) 
-    
-    def setVolume(self):
-        return np.multiply(self.getData(), self.volume).astype(np.int32)
-        #self.dataArray = np.multiply(self.dataArray, volume).astype(np.int32)
-    
-    def setSpeed(self):
+    def getData(self, speed):
+        if speed == 1:
+            audio = []
+            for i in range(0, len(self.data), self.block_align):
+                sample = []
+                for j in range(self.num_channels):
+                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                audio.append(sample)
+            return np.array(audio, dtype=np.int32) 
+        elif speed == 2:
+            audio = []
+            for i in range(0, len(self.data), self.block_align):
+                sample = []
+                for j in range(self.num_channels):
+                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                audio.append(sample)
+            audio_resample = []
+            for i in range(0, len(audio)-1, 2):
+                audio_resample.append([int((audio[i][0] + audio[i+1][0])/2), int((audio[i][1] + audio[i+1][1])/2)])
+            return np.array(audio_resample, dtype=np.int32)
+        elif speed == 0.5:
+            audio = []
+            for i in range(0, len(self.data), self.block_align):
+                sample = []
+                for j in range(self.num_channels):
+                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                audio.append(sample)
+                audio.append(sample)
+            return np.array(audio, dtype=np.int32)
+        else:
+            raise ValueError('Invalid speed.')
+
+    def getStream(self):
         try:
             return p.open(format=pyaudio.paInt32,
             channels=self.num_channels,
-            rate=int(self.sample_rate * self.speed),
+            rate=self.sample_rate,
             output=True)
         except OSError:
             sys.exit(0)
 
-    def changeVolume(self, new_volume):
-        self.pause()
-        old_volume = self.volume
-        self.volume = new_volume
-        self.dataArray = np.multiply(self.dataArray, int(new_volume/old_volume)).astype(np.int32)
-        self.playSound()
-
-    def changeSpeed(self, new_speed):
-        self.pause()
-        try:
-            old_speed = self.speed
-            self.speed = new_speed
-            self.stream = p.open(format=pyaudio.paInt32,
-            channels=self.num_channels,
-            rate=int(self.sample_rate * int(new_speed/old_speed)),
-            output=True)
-            self.playSound()
-        except OSError:
-            sys.exit(0)       
-
-    def playSound(self):
+    def playSound(self, speed, volume):
         # or unpause
-        CHUNK = 1024
-        while self.dataArray.size != 0:
-            self.stream.write(self.dataArray[:CHUNK].astype(np.int32).tobytes())
-            self.dataArray = self.dataArray[CHUNK:]
+        self.speed = speed
+        self.volume = volume
+        if self.speed == 1:
+            self.normalSpeed(self.volume)
+        elif self.speed == 2:
+            self.doubleSpeed(self.volume)
+        elif self.speed == 0.5:
+            self.halfSpeed(self.volume)
+        else:
+            raise ValueError('Invalid speed.')
+
+    def normalSpeed(self, volume):
+        if self.stream.is_active:
+            self.pause()
+            self.stream = self.getStream()
+        CHUNK = 2#1024
+        data = np.multiply(self.dataNormal, volume).astype(np.int32)
+        while data.size != 0:
+            #self.stream.write(self.dataNormal[:CHUNK].astype(np.int32).tobytes())
+            self.stream.write(data[:CHUNK].astype(np.int32).tobytes())
+            data = data[CHUNK:]
+            self.dataNormal = self.dataNormal[CHUNK:]
+            self.dataDouble = self.dataDouble[int(CHUNK/2):]
+            self.dataHalf = self.dataHalf[(CHUNK*2):]
+
+    def doubleSpeed(self, volume):
+        if self.stream.is_active:
+            self.pause()
+            self.stream = self.getStream()
+        CHUNK = 2#1024
+        data = np.multiply(self.dataDouble, volume).astype(np.int32)
+        while data.size != 0:
+            self.stream.write(data[:int(CHUNK/2)].astype(np.int32).tobytes())
+            data = data[int(CHUNK/2):]
+            self.dataNormal = self.dataNormal[CHUNK:]
+            self.dataDouble = self.dataDouble[int(CHUNK/2):]
+            self.dataHalf = self.dataHalf[(CHUNK*2):]
+
+    def halfSpeed(self, volume):
+        if self.stream.is_active:
+            self.pause()
+            self.stream = self.getStream()
+        CHUNK = 2#1024
+        data = np.multiply(self.dataHalf, volume).astype(np.int32)
+        while data.size != 0:
+            self.stream.write(data[:(CHUNK*2)].astype(np.int32).tobytes())
+            data = data[(CHUNK*2):]
+            self.dataNormal = self.dataNormal[CHUNK:]
+            self.dataDouble = self.dataDouble[int(CHUNK/2):]
+            self.dataHalf = self.dataHalf[(CHUNK*2):]
 
     def pause(self):
         self.stream.stop_stream()
@@ -128,12 +179,16 @@ class sound():
         self.stream.stop_stream()
         self.stream.close()
 
-    def replay(self):
+    def replay(self, speed, volume):
+        self.speed = speed
+        self.volume = volume
         self.stream.stop_stream()
         self.stream.close()
-        self.stream = self.setSpeed()
-        self.dataArray = self.setVolume()
-        self.playSound()
+        self.stream = self.getStream()
+        self.dataNormal = self.getData(1)
+        self.dataDouble = self.getData(2)
+        self.dataHalf = self.getData(0.5)
+        self.playSound(self.speed, self.volume)
 
 if __name__ == "__main__":
     # call getPyAudio before play
@@ -142,7 +197,7 @@ if __name__ == "__main__":
     # press the stop button to stop
     # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
-    volume = 1
+    volume = 2
     playRecording("test.wav", 1, volume)
     playRecording("test.wav", 2, volume)
     playRecording("test.wav", 0.5, volume)
