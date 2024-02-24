@@ -10,7 +10,7 @@ def getPyAudio():
 def stop():
     p.terminate()
 
-def playRecording(file_path, speed=1, volume=1):
+'''def playRecording(file_path, speed=1, volume=1):
     # for testing
 
     # Define voice class
@@ -39,7 +39,7 @@ def playRecording(file_path, speed=1, volume=1):
     voice.replay(speed, volume)
 
     # To stop???
-    voice.stop()
+    voice.stop()'''
     
 class sound():
     def __init__(self, file_path, speed=1, volume=1):
@@ -202,7 +202,7 @@ class sound():
         plt.axis('off')
         plt.savefig('plot.png')
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     # call getPyAudio before play
     # press the button to select the value of speed
     # press the play button to play the audio
@@ -213,4 +213,4 @@ if __name__ == "__main__":
     playRecording("example.wav", 1, volume)
     playRecording("example.wav", 2, volume)
     playRecording("example.wav", 0.5, volume)
-    stop()
+    stop()'''
