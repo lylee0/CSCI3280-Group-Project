@@ -10,17 +10,17 @@ def getPyAudio():
 def stop():
     p.terminate()
 
-'''def playRecording(file_path, speed=1, volume=1):
+def playRecording(file_path, speed=1, volume=1, start=0):
     # for testing
 
     # Define voice class
-    voice = sound(file_path, speed, volume)
+    voice = sound(file_path, speed, volume, start)
 
     # To plot waveform
     voice.visualize()
 
     # To play
-    voice.playSound(speed, volume)    
+    voice.playSound(speed, volume, start)    
 
     # To change speed 
     '''voice.playSound(2, volume)
@@ -36,16 +36,17 @@ def stop():
 
     # To replay
     #voice.replay(1, 1)
-    voice.replay(speed, volume)
+    voice.replay(speed, volume, 0)
 
     # To stop???
-    voice.stop()'''
+    voice.stop()
     
 class sound():
-    def __init__(self, file_path, speed=1, volume=1):
+    def __init__(self, file_path, speed=1, volume=1, start=0):
         self.file_path = file_path
         self.speed = speed
         self.volume = volume
+        self.start = start
         if file_path[-4:] == ".wav":
             with open(self.file_path, "rb") as recording:
                 # Here are the original information
@@ -61,8 +62,6 @@ class sound():
                     raise ValueError('File is not in PCM format.')
                 self.num_channels = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.sample_rate = int.from_bytes(recording.read(4), byteorder='little') #little
-                '''if self.sample_rate != 44100:
-                    raise ValueError('Sampling Rate is not Supported.')'''
                 self.byte_rate = int.from_bytes(recording.read(4), byteorder='little') #little
                 self.block_align = int.from_bytes(recording.read(2), byteorder='little') #little
                 self.bits_per_sample = int.from_bytes(recording.read(2), byteorder='little') #little
@@ -124,10 +123,11 @@ class sound():
         except OSError:
             sys.exit(0)
 
-    def playSound(self, speed=1, volume=1):
+    def playSound(self, speed=1, volume=1, start=0):
         # or unpause
         self.speed = speed
         self.volume = volume
+        self.start = start
         if self.speed == 1:
             self.normalSpeed(self.volume)
         elif self.speed == 2:
@@ -143,6 +143,7 @@ class sound():
             self.stream = self.getStream()
         CHUNK = 2
         data = np.multiply(self.dataNormal, volume).astype(np.int32)
+        data = data[int(self.start * self.sample_rate):]
         while data.size != 0:
             self.stream.write(data[:CHUNK].astype(np.int32).tobytes())
             data = data[CHUNK:]
@@ -156,6 +157,7 @@ class sound():
             self.stream = self.getStream()
         CHUNK = 2
         data = np.multiply(self.dataDouble, volume).astype(np.int32)
+        data = data[int(self.start * int(self.sample_rate//2)):]
         while data.size != 0:
             self.stream.write(data[:int(CHUNK/2)].astype(np.int32).tobytes())
             data = data[int(CHUNK/2):]
@@ -169,6 +171,7 @@ class sound():
             self.stream = self.getStream()
         CHUNK = 2
         data = np.multiply(self.dataHalf, volume).astype(np.int32)
+        data = data[int(self.start * self.sample_rate * 2):]
         while data.size != 0:
             self.stream.write(data[:(CHUNK*2)].astype(np.int32).tobytes())
             data = data[(CHUNK*2):]
@@ -183,16 +186,17 @@ class sound():
         self.stream.stop_stream()
         self.stream.close()
 
-    def replay(self, speed=1, volume=1):
+    def replay(self, speed=1, volume=1, start=0):
         self.speed = speed
         self.volume = volume
+        self.start = start
         self.stream.stop_stream()
         self.stream.close()
         self.stream = self.getStream()
-        self.dataNormal = self.getData(1)
-        self.dataDouble = self.getData(2)
-        self.dataHalf = self.getData(0.5)
-        self.playSound(self.speed, self.volume)
+        self.dataNormal = self.getData(1)#[int(self.start * self.sample_rate):]
+        self.dataDouble = self.getData(2)#[int(self.start * int(self.sample_rate//2)):]
+        self.dataHalf = self.getData(0.5)#[int(self.start * self.sample_rate * 2):]
+        self.playSound(self.speed, self.volume, self.start)
 
     def visualize(self):
         amplitude = np.max(self.dataArray, axis=1)
@@ -202,7 +206,7 @@ class sound():
         plt.axis('off')
         plt.savefig('plot.png')
 
-'''if __name__ == "__main__":
+if __name__ == "__main__":
     # call getPyAudio before play
     # press the button to select the value of speed
     # press the play button to play the audio
@@ -210,7 +214,8 @@ class sound():
     # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
     volume = 2
-    playRecording("example.wav", 1, volume)
-    playRecording("example.wav", 2, volume)
-    playRecording("example.wav", 0.5, volume)
-    stop()'''
+    start = 2
+    playRecording("example.wav", 1, volume, start)
+    playRecording("example.wav", 2, volume, start)
+    playRecording("example.wav", 0.5, volume, start)
+    stop()
