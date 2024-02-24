@@ -17,6 +17,7 @@ Sound Playback (playback.py):<br>
 1.1 Call getPyAudio()<br>
 1.2 Define initial value of speed and volume<br>
 1.3 Define a class: voice = sound(file_path, speed, volume)<br>
+1.4 Call voice.visualize() # plot.png is saved, which is the waveform of audio<br>
 2. Play:<br>
 2.1 Call voice.playSound(speed, volume)<br>
 3. Pause:<br>
