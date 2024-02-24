@@ -4,7 +4,7 @@ import time
 import struct
 
 def startRecording(fs, chunk, channels, deviceIndex):
-    sample_format = pyaudio.paInt32
+    sample_format = pyaudio.paInt16
 
     p = pyaudio.PyAudio()
 
@@ -56,9 +56,9 @@ def fileWriting(frames, channel, fs, outPath):
     audioFormat = struct.pack('<H', 1)
     channelNumber = struct.pack('<H', channel)
     fsRate = struct.pack('<I', fs)
-    byteRate = struct.pack('<I', fs * channel * 4) #4 represent 32-bit rate
-    blockAlign = struct.pack('<H', channel * 4) #4 represent 32-bit rate
-    bitPerSample = struct.pack('<H', 32)
+    byteRate = struct.pack('<I', fs * channel * 2) #2 represent 16-bit rate
+    blockAlign = struct.pack('<H', channel * 2) #2 represent 16-bit rate
+    bitPerSample = struct.pack('<H', 16)
 
     #data chunk
     dataChunk = struct.pack('>4s', "data".encode('utf-8'))
