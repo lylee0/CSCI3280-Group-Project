@@ -12,24 +12,28 @@ Sound Recording (soundRecording.py):
 Get device index (showDevice.py):
 1. Call getDeviceList() (Will return index & name)
 
-Sound Playback (playback.py):
-1. Select a recording file:
-1.1 Call getPyAudio()
-1.2 Define a class: voice = sound(file_path)
-2. Play:
-2.1 Call voice.playSound()
-3. Pause:
-3.1 Call voice.pause()
-4 Unpause:
-4.1 Call voice.playSound()
-5. Change Volume:
-5.1 Call voice.playSound(volume=volume) # volume is the input
-6. Change Speed (2x):
-6.1 Call voice.playSound(speed=2)
-7. Change Speed (0.5x):
-7.1 Call voice.playSound(speed=0.5)
-8. Replay:
-8.1 Call voice.replay(speed, volume) # get current speed and volume now
-9. When end:
-9.1 Call voice.stop()
-9.2 Call stop()
+Sound Playback (playback.py):<br>
+1. Select a recording file:<br>
+1.1 Call getPyAudio()<br>
+1.2 Define initial value of speed and volume<br>
+1.3 Define a class: voice = sound(file_path, speed, volume)<br>
+2. Play:<br>
+2.1 Call voice.playSound(speed, volume)<br>
+3. Pause:<br>
+3.1 Call voice.pause()<br>
+4. Unpause:<br>
+4.1 Call voice.playSound(speed, volume)<br>
+5. Change Volume:<br>
+5.1 Change value of volume<br>
+5.2 Call voice.playSound(speed, volume) # volume is the input<br>
+6. Change Speed (2x):<br>
+6.1 speed = 2<br>
+6.2 Call voice.playSound(speed=2, volume)<br>
+7. Change Speed (0.5x):<br>
+7.1 speed = 0.5<br>
+7.2 Call voice.playSound(speed=0.5, volume)<br>
+8. Replay:<br>
+8.1 Call voice.replay(speed, volume) # get current speed and volume now<br>
+9. When end:<br>
+9.1 Call voice.stop()<br>
+9.2 Call stop()<br>
