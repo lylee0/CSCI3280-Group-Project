@@ -195,7 +195,7 @@ class sound():
         self.playSound(self.speed, self.volume)
 
     def visualize(self):
-        amplitude = np.sum(self.dataArray, axis=1)
+        amplitude = np.max(self.dataArray, axis=1)
         time = len(amplitude) // self.sample_rate
         plt.plot(np.linspace(0, time, num=len(amplitude)), amplitude, color='royalblue')
         plt.axis('off')
