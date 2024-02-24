@@ -1,6 +1,16 @@
 # CSCI3280-Group-Project
 Peer-to-Peer Voice Chat System
 
+Library required (plz add the list if new library used):
+struct
+numpy
+noisereduce
+pyaudio
+sys
+speech_recognition
+time
+threading
+
 Sound Recording (soundRecording.py):
 1. When press "Record":
 1.1. Call startRecording(fs, chunk, channel, device index), get two return object [streamObj, pObj]
@@ -11,6 +21,9 @@ Sound Recording (soundRecording.py):
 
 Get device index (showDevice.py):
 1. Call getDeviceList() (Will return index & name)
+
+Noise Reduction (noiseReduction.py):
+1. Call noiseReduction(input path, output path, fs)
 
 Sound Playback (playback.py):<br>
 1. Select a recording file:<br>
