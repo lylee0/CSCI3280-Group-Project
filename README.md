@@ -25,7 +25,7 @@ Sound Playback (playback.py):<br>
 4. Unpause:<br>
 4.1 Call voice.playSound(speed, volume)<br>
 5. Change Volume:<br>
-5.1 Change value of volume<br>
+5.1 Change value of volume # volume can be in range 0.01 to 3, default is 1<br>
 5.2 Call voice.playSound(speed, volume) # volume is the input<br>
 6. Change Speed (2x):<br>
 6.1 speed = 2<br>
