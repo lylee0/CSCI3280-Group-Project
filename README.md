@@ -28,10 +28,10 @@ Noise Reduction (noiseReduction.py):
 Sound Playback (playback.py):<br>
 1. Select a recording file:<br>
 1.1 Call getPyAudio()<br>
-1.2 Define initial value of speed, volume, and start<br>
-1.3 Define a class: voice = sound(file_path, speed, volume)<br>
+1.2 Define initial value of speed, volume, and start # start is the start time in second<br>
+1.3 Define a class: voice = sound(file_path, speed, volume, start)<br>
 1.4 Call voice.visualize() # plot.png is saved, which is the waveform of audio<br>
-2. Play:<br>
+2. Play Sound:<br>
 2.1 Call voice.playSound(speed, volume, start)<br>
 3. Pause:<br>
 3.1 Call voice.pause()<br>
@@ -47,10 +47,10 @@ Sound Playback (playback.py):<br>
 7.1 speed = 0.5<br>
 7.2 Call voice.playSound(speed, volume, start)<br>
 8. Replay:<br>
-8.1 Call voice.replay(speed, volume, start) # get current speed and volume<br>
+8.1 Call voice.playSound(speed, volume, start) # get current speed and volume<br>
 9. Replay from another time<br>
 9.1 Change value of start (in second)<br>
-9.2 Call voice.replay(speed, volume, start)<br>
+9.2 Call voice.playSound(speed, volume, start)<br>
 9. When end:<br>
 9.1 Call voice.stop()<br>
 9.2 Call stop()<br>
