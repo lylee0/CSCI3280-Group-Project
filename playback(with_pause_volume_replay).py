@@ -1,6 +1,7 @@
 import numpy as np
 import pyaudio
 import sys
+import matplotlib.pyplot as plt
 
 def getPyAudio():
     global p
@@ -14,6 +15,9 @@ def playRecording(file_path, speed=1, volume=1):
 
     # Define voice class
     voice = sound(file_path, speed, volume)
+
+    # To plot waveform
+    voice.visualize()
 
     # To play
     voice.playSound(speed, volume)    
@@ -190,6 +194,13 @@ class sound():
         self.dataHalf = self.getData(0.5)
         self.playSound(self.speed, self.volume)
 
+    def visualize(self):
+        amplitude = np.sum(self.dataArray, axis=1)
+        time = len(amplitude) // self.sample_rate
+        plt.plot(np.linspace(0, time, num=len(amplitude)), amplitude, color='royalblue')
+        plt.axis('off')
+        plt.savefig('plot.png')
+
 if __name__ == "__main__":
     # call getPyAudio before play
     # press the button to select the value of speed
@@ -198,7 +209,7 @@ if __name__ == "__main__":
     # can adjust sound: from 0.05-3.5 (default is 1)
     getPyAudio()
     volume = 2
-    playRecording("test.wav", 1, volume)
-    playRecording("test.wav", 2, volume)
-    playRecording("test.wav", 0.5, volume)
+    playRecording("example.wav", 1, volume)
+    playRecording("example.wav", 2, volume)
+    playRecording("example.wav", 0.5, volume)
     stop()
