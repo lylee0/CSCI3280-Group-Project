@@ -29,7 +29,7 @@ Sound Playback (playback.py):
 7. Change Speed (0.5x):
 7.1 Call voice.playSound(speed=0.5)
 8. Replay:
-8.1 Call voice.replay
+8.1 Call voice.replay(speed, volume) # get current speed and volume now
 9. When end:
 9.1 Call voice.stop()
 9.2 Call stop()
