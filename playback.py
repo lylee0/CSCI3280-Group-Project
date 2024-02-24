@@ -36,7 +36,7 @@ def playRecording(file_path, speed=1, volume=1, start=0):
 
     # To replay
     #voice.replay(1, 1)
-    voice.replay(speed, volume, 0)
+    voice.playSound(speed, volume, 0)
 
     # To stop???
     voice.stop()
@@ -128,56 +128,23 @@ class sound():
         self.speed = speed
         self.volume = volume
         self.start = start
+        if self.stream.is_active:
+            self.pause()
+            self.stream = self.getStream()
+
         if self.speed == 1:
-            self.normalSpeed(self.volume)
+            data = np.multiply(self.dataNormal, volume).astype(np.int32)
+            data = data[int(self.start * self.sample_rate):]
         elif self.speed == 2:
-            self.doubleSpeed(self.volume)
+            data = np.multiply(self.dataDouble, volume).astype(np.int32)
+            data = data[int(self.start * int(self.sample_rate//2)):]
         elif self.speed == 0.5:
-            self.halfSpeed(self.volume)
+            data = np.multiply(self.dataHalf, volume).astype(np.int32)
+            data = data[int(self.start * self.sample_rate * 2):]
         else:
             raise ValueError('Invalid speed.')
-
-    def normalSpeed(self, volume=1):
-        if self.stream.is_active:
-            self.pause()
-            self.stream = self.getStream()
-        CHUNK = 2
-        data = np.multiply(self.dataNormal, volume).astype(np.int32)
-        data = data[int(self.start * self.sample_rate):]
-        while data.size != 0:
-            self.stream.write(data[:CHUNK].astype(np.int32).tobytes())
-            data = data[CHUNK:]
-            self.dataNormal = self.dataNormal[CHUNK:]
-            self.dataDouble = self.dataDouble[int(CHUNK/2):]
-            self.dataHalf = self.dataHalf[(CHUNK*2):]
-
-    def doubleSpeed(self, volume=1):
-        if self.stream.is_active:
-            self.pause()
-            self.stream = self.getStream()
-        CHUNK = 2
-        data = np.multiply(self.dataDouble, volume).astype(np.int32)
-        data = data[int(self.start * int(self.sample_rate//2)):]
-        while data.size != 0:
-            self.stream.write(data[:int(CHUNK/2)].astype(np.int32).tobytes())
-            data = data[int(CHUNK/2):]
-            self.dataNormal = self.dataNormal[CHUNK:]
-            self.dataDouble = self.dataDouble[int(CHUNK/2):]
-            self.dataHalf = self.dataHalf[(CHUNK*2):]
-
-    def halfSpeed(self, volume=1):
-        if self.stream.is_active:
-            self.pause()
-            self.stream = self.getStream()
-        CHUNK = 2
-        data = np.multiply(self.dataHalf, volume).astype(np.int32)
-        data = data[int(self.start * self.sample_rate * 2):]
-        while data.size != 0:
-            self.stream.write(data[:(CHUNK*2)].astype(np.int32).tobytes())
-            data = data[(CHUNK*2):]
-            self.dataNormal = self.dataNormal[CHUNK:]
-            self.dataDouble = self.dataDouble[int(CHUNK/2):]
-            self.dataHalf = self.dataHalf[(CHUNK*2):]
+        
+        self.stream.write(data.astype(np.int32).tobytes())
 
     def pause(self):
         self.stream.stop_stream()
@@ -185,18 +152,6 @@ class sound():
     def stop(self):
         self.stream.stop_stream()
         self.stream.close()
-
-    def replay(self, speed=1, volume=1, start=0):
-        self.speed = speed
-        self.volume = volume
-        self.start = start
-        self.stream.stop_stream()
-        self.stream.close()
-        self.stream = self.getStream()
-        self.dataNormal = self.getData(1)#[int(self.start * self.sample_rate):]
-        self.dataDouble = self.getData(2)#[int(self.start * int(self.sample_rate//2)):]
-        self.dataHalf = self.getData(0.5)#[int(self.start * self.sample_rate * 2):]
-        self.playSound(self.speed, self.volume, self.start)
 
     def visualize(self):
         amplitude = np.max(self.dataArray, axis=1)
