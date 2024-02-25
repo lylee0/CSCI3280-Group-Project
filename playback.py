@@ -23,16 +23,16 @@ def playRecording(file_path, speed=1, volume=1, start=0):
     voice.playSound(speed, volume, start)    
 
     # To change speed 
-    '''voice.playSound(2, volume)
+    '''voice.playSound(2, volume, start)
 
     # To change volume
-    voice.playSound(speed, 2)
+    voice.playSound(speed, 2, start)
 
     # To pause
     voice.pause()
 
     # To unpause
-    voice.playSound(speed, volume)'''
+    voice.playSound(speed, volume, start)'''
 
     # To replay
     #voice.replay(1, 1)
@@ -88,7 +88,7 @@ class sound():
             for i in range(0, len(self.data), self.block_align):
                 sample = []
                 for j in range(self.num_channels):
-                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                    sample.append(2**(32 - self.bits_per_sample) * int.from_bytes(self.data[i+j*self.block_align//self.num_channels:i+(j+1)*self.block_align//self.num_channels], byteorder='little', signed=True))
                 audio.append(sample)
             return np.array(audio, dtype=np.int32) 
         elif speed == 2:
@@ -96,18 +96,21 @@ class sound():
             for i in range(0, len(self.data), self.block_align):
                 sample = []
                 for j in range(self.num_channels):
-                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                    sample.append(2**(32 - self.bits_per_sample) * int.from_bytes(self.data[i+j*self.block_align//self.num_channels:i+(j+1)*self.block_align//self.num_channels], byteorder='little', signed=True))
                 audio.append(sample)
             audio_resample = []
             for i in range(0, len(audio)-1, 2):
-                audio_resample.append([int((audio[i][0] + audio[i+1][0])/2), int((audio[i][1] + audio[i+1][1])/2)])
+                sample = []
+                for j in range(self.num_channels):
+                    sample.append(int((audio[i][j] + audio[i+1][j])/2))
+                audio_resample.append(sample)
             return np.array(audio_resample, dtype=np.int32)
         elif speed == 0.5:
             audio = []
             for i in range(0, len(self.data), self.block_align):
                 sample = []
                 for j in range(self.num_channels):
-                    sample.append(int.from_bytes(self.data[i+j*self.block_align:i+(j+1)*self.block_align], byteorder='little', signed=True))
+                    sample.append(2**(32 - self.bits_per_sample) * int.from_bytes(self.data[i+j*self.block_align//self.num_channels:i+(j+1)*self.block_align//self.num_channels], byteorder='little', signed=True))
                 audio.append(sample)
                 audio.append(sample)
             return np.array(audio, dtype=np.int32)
@@ -170,7 +173,7 @@ if __name__ == "__main__":
     getPyAudio()
     volume = 2
     start = 2
-    playRecording("example.wav", 1, volume, start)
-    playRecording("example.wav", 2, volume, start)
+    playRecording("exampleMono.wav", 1, volume, start)
+    playRecording("newTest.wav", 2, volume, start)
     playRecording("example.wav", 0.5, volume, start)
     stop()
