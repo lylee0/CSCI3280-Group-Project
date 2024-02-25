@@ -54,3 +54,8 @@ Sound Playback (playback.py):<br>
 9. When end:<br>
 9.1 Call voice.stop()<br>
 9.2 Call stop()<br>
+10. For non oop version:<br>
+10.1 playSound(file_path, speed=1, volume=1, start=0)<br>
+10.2 pause()<br>
+10.3 stop()<br>
+10.4 visualize(file_path)<br>
