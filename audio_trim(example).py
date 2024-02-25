@@ -11,17 +11,17 @@ def edit(file_path, start, end, speed, volume):
         dataNormal = wav["dataNormal"]
         dataNormal = dataNormal[int(start * sample_rate):int(end * sample_rate)]
         dataNormal = np.multiply(dataNormal, volume).astype(np.int32)
-        return dataNormal.astype(np.int32).tobytes()
+        return [dataNormal.astype(np.int32).tobytes()]
     elif speed == 2:
         dataDouble = wav["dataDouble"]
         dataDouble = dataDouble[int(start * int(sample_rate//2)):int(end * int(sample_rate//2))]
         dataDouble = np.multiply(dataDouble, volume).astype(np.int32)
-        return dataDouble.astype(np.int32).tobytes()
+        return [dataDouble.astype(np.int32).tobytes()]
     elif speed == 0.5:
         dataHalf = wav["dataHalf"]
         dataHalf = dataHalf[int(start * sample_rate * 2):int(end * sample_rate * 2)]
         dataHalf = np.multiply(dataHalf, volume).astype(np.int32)
-        return dataHalf.astype(np.int32).tobytes()
+        return [dataHalf.astype(np.int32).tobytes()]
     else:
         raise ValueError('Invalid speed.')
 
@@ -51,7 +51,7 @@ def overwrite(file_path, start_record, end_record):
     dataNormal_2 = np.array(audio_normal, dtype=np.int32) 
     dataArray = np.concatenate((dataNormal_1, dataNormal_2), axis=0)
     dataArray = np.concatenate((dataArray, dataNormal_3), axis=0)
-    return dataArray.astype(np.int32).tobytes()
+    return [dataArray.astype(np.int32).tobytes()]
 
 if __name__ == "__main__":
     frames = overwrite("example.wav", 0.8, 1.5)
