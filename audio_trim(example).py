@@ -1,6 +1,7 @@
 import playback
 import soundRecording
 import numpy as np
+import time
 
 def edit(file_path, start, end, speed, volume):
     # return frames to write
@@ -37,9 +38,10 @@ def overwrite(file_path, start_record, end_record):
     streamObj, pObj = soundRecording.startRecording(44100, 1024, 2, 1)
     # call threadWriting, get frames
     frames = soundRecording.threadWriting(streamObj, 1024)
+    time.sleep(5)
     # call stopRecording
     soundRecording.stopRecording(streamObj, pObj)
-    
+
     audio_normal = []
     for i in range(0, len(frames), block_align):
         sample = []
@@ -52,5 +54,8 @@ def overwrite(file_path, start_record, end_record):
     return dataArray.astype(np.int32).tobytes()
 
 if __name__ == "__main__":
+    frames = overwrite("example.wav", 0.8, 1.5)
+    soundRecording.fileWriting(frames, 2, 44100, 'example.wav')
+
     frames = edit("example.wav", 0.5, 2, 2, 2)
     soundRecording.fileWriting(frames, 2, 44100, 'example.wav')
