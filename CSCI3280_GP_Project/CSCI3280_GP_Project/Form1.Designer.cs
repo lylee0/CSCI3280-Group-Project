@@ -33,6 +33,7 @@
             this.playButton = new System.Windows.Forms.Button();
             this.timeDetails = new System.Windows.Forms.Label();
             this.playSpeedDropDown = new System.Windows.Forms.ComboBox();
+            this.deviceDropDown = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // recordingContents
@@ -43,7 +44,7 @@
             this.recordingContents.BackColor = System.Drawing.Color.GreenYellow;
             this.recordingContents.Location = new System.Drawing.Point(12, 12);
             this.recordingContents.Name = "recordingContents";
-            this.recordingContents.Size = new System.Drawing.Size(300, 805);
+            this.recordingContents.Size = new System.Drawing.Size(300, 653);
             this.recordingContents.TabIndex = 0;
             this.recordingContents.Paint += new System.Windows.Forms.PaintEventHandler(this.recordingContents_Paint);
             // 
@@ -84,6 +85,7 @@
             // 
             // playSpeedDropDown
             // 
+            this.playSpeedDropDown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.playSpeedDropDown.FormattingEnabled = true;
             this.playSpeedDropDown.Items.AddRange(new object[] {
             "0.25x",
@@ -92,17 +94,28 @@
             "1.5x",
             "2x",
             "4x"});
-            this.playSpeedDropDown.Location = new System.Drawing.Point(1239, 712);
+            this.playSpeedDropDown.Location = new System.Drawing.Point(1215, 712);
             this.playSpeedDropDown.Name = "playSpeedDropDown";
             this.playSpeedDropDown.Size = new System.Drawing.Size(192, 32);
             this.playSpeedDropDown.TabIndex = 4;
             this.playSpeedDropDown.SelectedIndexChanged += new System.EventHandler(this.playSpeedDropDown_SelectedIndexChanged);
+            // 
+            // deviceDropDown
+            // 
+            this.deviceDropDown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.deviceDropDown.Font = new System.Drawing.Font("PMingLiU", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.deviceDropDown.FormattingEnabled = true;
+            this.deviceDropDown.Location = new System.Drawing.Point(12, 711);
+            this.deviceDropDown.Name = "deviceDropDown";
+            this.deviceDropDown.Size = new System.Drawing.Size(300, 40);
+            this.deviceDropDown.TabIndex = 5;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1574, 829);
+            this.Controls.Add(this.deviceDropDown);
             this.Controls.Add(this.playSpeedDropDown);
             this.Controls.Add(this.timeDetails);
             this.Controls.Add(this.playButton);
@@ -125,6 +138,7 @@
         private System.Windows.Forms.Button playButton;
         private System.Windows.Forms.Label timeDetails;
         private System.Windows.Forms.ComboBox playSpeedDropDown;
+        private System.Windows.Forms.ComboBox deviceDropDown;
     }
 }
 

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +20,24 @@ namespace CSCI3280_GP_Project
 
             //Set Default to 1x
             playSpeedDropDown.SelectedIndex = 2;
+
+
+            string deviceListText = FunctionCalling.CallPythonFunction(Environment.CurrentDirectory + "\\python\\showDevice.py");
+
+            Console.WriteLine(deviceListText.Split('\n').Length);
+
+            string[] deviceList = deviceListText.Split('\n');
+            Array.Resize(ref deviceList, deviceList.Length - 1);
+
+
+            deviceDropDown.Items.Clear();
+            deviceDropDown.Items.AddRange(deviceList);
+            deviceDropDown.SelectedIndex = 0;
+
+
+
+
+
 
             //For testing
             for (int i = 0; i < 100; i++) 

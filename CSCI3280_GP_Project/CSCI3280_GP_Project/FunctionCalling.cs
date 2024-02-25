@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Printing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,11 +11,9 @@ namespace CSCI3280_GP_Project
 {
     static class FunctionCalling
     {
-        public static void CallPythonFunction(string arg = "")
+        public static string CallPythonFunction(string arg = "")
         {
             string path = "python";
-
-            //string arg = Application.persistentDataPath + $"/try.py";
 
             // Create a process
             Process process = new Process();
@@ -35,6 +35,8 @@ namespace CSCI3280_GP_Project
             string consoleMessage = process.StandardOutput.ReadToEnd();
             string errorMessage = process.StandardError.ReadToEnd();
             process.WaitForExit();
+
+            return consoleMessage;
         }
     }
 }

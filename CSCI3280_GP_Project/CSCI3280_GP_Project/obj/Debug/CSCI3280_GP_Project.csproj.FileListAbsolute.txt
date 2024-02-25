@@ -18,3 +18,6 @@ D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\De
 D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.csproj.CoreCompileInputs.cache
 D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.exe
 D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.pdb
+D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\bin\Debug\Newtonsoft.Json.dll
+D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\bin\Debug\Newtonsoft.Json.xml
+D:\Develop\CSCI3280-Group-Project\CSCI3280_GP_Project\CSCI3280_GP_Project\obj\Debug\CSCI3280_GP_Project.csproj.CopyComplete
