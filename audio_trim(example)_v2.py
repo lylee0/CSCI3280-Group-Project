@@ -25,7 +25,7 @@ def edit(file_path, start, end, speed, volume):
     else:
         raise ValueError('Invalid speed.')
 
-def overwrite(file_path, start_record, end_record, deviceIndex):
+def overwrite(file_path, start_record, end_record, deviceIndex, overwriteTime):
     wav = playbackk.getData(file_path)
     sample_rate = wav["sample_rate"]
     block_align = wav["block_align"]
@@ -38,7 +38,7 @@ def overwrite(file_path, start_record, end_record, deviceIndex):
     streamObj, pObj = soundRecording.startRecording(44100, 1024, num_channels, deviceIndex)
     # call threadWriting, get frames
     frames = soundRecording.threadWriting(streamObj, 1024)
-    time.sleep(end_record-start_record)
+    time.sleep(overwriteTime)
     # call stopRecording
     soundRecording.stopRecording(streamObj, pObj)
     temp = b''.join(frames)
