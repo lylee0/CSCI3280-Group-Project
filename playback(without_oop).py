@@ -44,48 +44,34 @@ def readWav(file_path):
     else:
         raise ValueError('Wrong file name.')
     
-def getData(file_path, speed=1):
+def getData(file_path):
     wav = readWav(file_path)
     data = wav["data"]
     block_align = wav["block_align"]
     num_channels = wav["num_channels"]
     bits_per_sample = wav["bits_per_sample"]
-    if speed == 1:
-        audio = []
-        for i in range(0, len(data), block_align):
-            sample = []
-            for j in range(num_channels):
-                sample.append(2**(32 - bits_per_sample) * int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
-            audio.append(sample)
-        wav["dataNormal"] = np.array(audio, dtype=np.int32) 
-        return wav
-    elif speed == 2:
-        audio = []
-        for i in range(0, len(data), block_align):
-            sample = []
-            for j in range(num_channels):
-                sample.append(2**(32 - bits_per_sample) * int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
-            audio.append(sample)
-        audio_resample = []
-        for i in range(0, len(audio)-1, 2):
-            sample = []
-            for j in range(num_channels):
-                sample.append(int((audio[i][j] + audio[i+1][j])/2))
-            audio_resample.append(sample)
-        wav["dataDouble"] = np.array(audio_resample, dtype=np.int32)
-        return wav
-    elif speed == 0.5:
-        audio = []
-        for i in range(0, len(data), block_align):
-            sample = []
-            for j in range(num_channels):
-                sample.append(2**(32 - bits_per_sample) * int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
-            audio.append(sample)
-            audio.append(sample)
-        wav["dataHalf"] = np.array(audio, dtype=np.int32)
-        return wav
-    else:
-        raise ValueError('Invalid speed.')
+
+    audio_normal = []
+    audio_half = []
+    for i in range(0, len(data), block_align):
+        sample = []
+        for j in range(num_channels):
+            sample.append(2**(32 - bits_per_sample) * int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
+        audio_normal.append(sample)
+        audio_half.append(sample)
+        audio_half.append(sample)
+    wav["dataNormal"] = np.array(audio_normal, dtype=np.int32) 
+    wav["dataHalf"] = np.array(audio_half, dtype=np.int32)
+
+    audio_double = []
+    for i in range(0, len(audio_normal)-1, 2):
+        sample = []
+        for j in range(num_channels):
+            sample.append(int((audio_normal[i][j] + audio_normal[i+1][j])/2))
+        audio_double.append(sample)
+    wav["dataDouble"] = np.array(audio_double, dtype=np.int32)
+
+    return wav
 
 def getStream(wav):
     num_channels = wav["num_channels"]
@@ -100,7 +86,7 @@ def getStream(wav):
 
 def playSound(file_path, speed=1, volume=1, start=0):
     # or unpause
-    wav = getData(file_path, speed=1)
+    wav = getData(file_path)
     getPyAudio()
     global stream
     stream = getStream(wav)
