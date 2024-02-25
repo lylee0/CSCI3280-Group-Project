@@ -47,7 +47,7 @@ def overwrite(file_path, start_record, end_record, deviceIndex):
     for i in range(0, len(frames), block_align):
         sample = []
         for j in range(num_channels):
-            sample.append(int.from_bytes(frames[i+j*4:i+(j+1)*4], byteorder='little', signed=True))
+            sample.append(int.from_bytes(frames[i+j*4:i+(j+1)*4], byteorder='little', signed=True)) #Force 32-bit by recording mechanism
         audio_normal.append(sample)
     print(audio_normal)
     dataNormal_2 = np.array(audio_normal, dtype=np.int32) 
