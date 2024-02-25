@@ -4,7 +4,7 @@ import time
 import struct
 
 def startRecording(fs, chunk, channels, deviceIndex):
-    sample_format = pyaudio.paInt32
+    sample_format = pyaudio.paInt16
 
     p = pyaudio.PyAudio()
 
@@ -56,9 +56,9 @@ def fileWriting(frames, channel, fs, outPath):
     audioFormat = struct.pack('<H', 1)
     channelNumber = struct.pack('<H', channel)
     fsRate = struct.pack('<I', fs)
-    byteRate = struct.pack('<I', fs * channel * 4) #2 represent 32-bit rate
-    blockAlign = struct.pack('<H', channel * 4) #2 represent 32-bit rate
-    bitPerSample = struct.pack('<H', 32)
+    byteRate = struct.pack('<I', fs * channel * 2) #2 represent 16-bit rate
+    blockAlign = struct.pack('<H', channel * 2) #2 represent 16-bit rate
+    bitPerSample = struct.pack('<H', 16)
 
     #data chunk
     dataChunk = struct.pack('>4s', "data".encode('utf-8'))
@@ -89,5 +89,5 @@ frames = threadWriting(streamObj, 1024) #keep writing, para = stream object, chu
 time.sleep(5)
 # Set 2 when press stop button
 stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
-fileWriting(frames, 2, 44100, 'example_32.wav') #rewrite the data file to wav-capable, para = raw audio data, channel, fs, output path
+fileWriting(frames, 2, 44100, 'example.wav') #rewrite the data file to wav-capable, para = raw audio data, channel, fs, output path
 # End of Set 2
