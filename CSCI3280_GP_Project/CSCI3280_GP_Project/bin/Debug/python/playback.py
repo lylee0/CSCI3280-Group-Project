@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 
 def getPyAudio():
     global p
-    p = pyaudio.PyAudio()
-
-def stop():
-    p.terminate()
+    p = pyaudio.PyAudio()  
     
 def readWav(file_path):
     if file_path[-4:] == ".wav":
@@ -115,10 +112,9 @@ def pause():
 def stop():
     stream.stop_stream()
     stream.close()
-    stop()
+    p.terminate()
 
-def visualize(file_path):
-    wav = getData(file_path, speed=1)
+def visualize(wav):
     dataArray = wav["dataNormal"]
     sample_rate = wav["sample_rate"]
     amplitude = np.max(dataArray, axis=1)
