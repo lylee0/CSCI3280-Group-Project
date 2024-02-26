@@ -7,10 +7,11 @@ def edit(file_path, start, end, speed, volume):
     # return frames to write
     wav = playbackk.getData(file_path)
     sample_rate = wav["sample_rate"]
+    print(wav["bits_per_sample"])
     if speed == 1:
         dataNormal = wav["dataNormal"]
         dataNormal = dataNormal[int(start * sample_rate):int(end * sample_rate)]
-        dataNormal = np.multiply(dataNormal, volume).astype(np.int32)
+        dataNormal = np.multiply(dataNormal, volume * 2**16).astype(np.int32)
         return [dataNormal.astype(np.int32).tobytes()]
     elif speed == 2:
         dataDouble = wav["dataDouble"]
@@ -59,9 +60,9 @@ def overwrite(file_path, start_record, end_record, deviceIndex, overwriteTime):
 if __name__ == "__main__":
     # call record, get frames
     # call overwrite to concatenate
-    frames = overwrite("test.wav", 1, 2, 1)
+    #frames = overwrite("test.wav", 1, 2, 1)
     # call fileWriting to write file
-    soundRecording.fileWriting(frames, 2, 44100, 'example_overwrite.wav')
+    #soundRecording.fileWriting(frames, 2, 44100, 'example_overwrite.wav')
 
-    frames = edit("test.wav", 0, 1, 1, 2)
+    frames = edit("Test Case/newTest.wav", 0, 3, 1, 1)
     soundRecording.fileWriting(frames, 2, 44100, 'example_edit.wav')
