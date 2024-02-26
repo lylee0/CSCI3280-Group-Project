@@ -79,5 +79,5 @@ def noiseReduction(input, output, fs):
                 block = struct.pack('<i', block)
                 recording.write(block)
 
-
-noiseReduction('Test Case/exampleNoise.wav', 'testing2.wav', 44100)
+if __name__ == "__main__":
+    noiseReduction('Test Case/exampleNoise.wav', 'testing2.wav', 44100)

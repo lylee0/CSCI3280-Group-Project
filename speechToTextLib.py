@@ -9,4 +9,5 @@ def speechToText(path):
         result = r.recognize_google(audio)
     return result
 
-print(speechToText('example.wav'))
+if __name__ == "__main__":
+    print(speechToText('example.wav'))

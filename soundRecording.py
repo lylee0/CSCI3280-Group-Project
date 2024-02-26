@@ -81,13 +81,13 @@ def fileWriting(frames, channel, fs, outPath):
         for i in range(0,len(frames)):
             output.write(frames[i])
 
-
-# Set 1 when press play button
-streamObj, pObj = startRecording(44100, 1024, 1, 1) #initiate, para = fs, chunk, channel
-frames = threadWriting(streamObj, 1024) #keep writing, para = stream object, chunk
-# End of set 1
-time.sleep(5)
-# Set 2 when press stop button
-stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
-fileWriting(frames, 1, 44100, 'example_32.wav') #rewrite the data file to wav-capable, para = raw audio data, channel, fs, output path
-# End of Set 2
+if __name__ == "__main__":
+    # Set 1 when press play button
+    streamObj, pObj = startRecording(44100, 1024, 1, 1) #initiate, para = fs, chunk, channel
+    frames = threadWriting(streamObj, 1024) #keep writing, para = stream object, chunk
+    # End of set 1
+    time.sleep(5)
+    # Set 2 when press stop button
+    stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
+    fileWriting(frames, 1, 44100, 'example_32.wav') #rewrite the data file to wav-capable, para = raw audio data, channel, fs, output path
+    # End of Set 2

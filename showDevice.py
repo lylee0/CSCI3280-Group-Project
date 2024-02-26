@@ -12,4 +12,5 @@ def getDeviceList():
     print(returnList)
     return returnList
 
-getDeviceList()
+if __name__ == "__main__":
+    getDeviceList()
