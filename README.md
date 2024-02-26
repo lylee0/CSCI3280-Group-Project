@@ -62,5 +62,5 @@ Sound Playback (playback.py):<br>
 10.4 visualize(file_path)<br>
 
 Audio Trim(audio-edit.py):
-1. Drag 2 sliders to the desired start time and end time and press Trim button:<br>
+1. Drag 2 sliders to the desired start time(s) and end time(s) and press Trim button:<br>
 Call audio_trim(input_file, start_time, end_time), return trimmed audio file

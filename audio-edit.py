@@ -5,8 +5,8 @@ def audio_trim(input_file, start_time, end_time):
     Modify the start and end time of the audio
     Parameter: 
         input_file - file to be trimmed
-        start_time - new start time of the audio
-        end_time - new end time of the audio
+        start_time - new start time of the audio (in seconds)
+        end_time - new end time of the audio (in seconds)
     Output:
         a trimmed audio wav file
     """
@@ -30,4 +30,4 @@ def audio_trim(input_file, start_time, end_time):
     wav_in.close()
     wav_out.close()
 # For testing
-audio_trim('PinkPanther30.wav', 5.0, 10.0)
+audio_trim('Raw Test Data/32bitS.wav', 1.0, 2.0)
