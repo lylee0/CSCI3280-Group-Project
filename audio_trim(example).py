@@ -3,9 +3,8 @@ import soundRecording
 import numpy as np
 #import time
 
-def edit(file_path, start, end, speed, volume):
+def edit(wav, start, end, speed, volume):
     # return frames to write
-    wav = playback.getData(file_path)
     sample_rate = wav["sample_rate"]
     if speed == 1:
         dataNormal = wav["dataNormal"]
@@ -25,8 +24,7 @@ def edit(file_path, start, end, speed, volume):
     else:
         raise ValueError('Invalid speed.')
 
-def overwrite(file_path, start_record, end_record, frames):
-    wav = playback.getData(file_path)
+def overwrite(wav, start_record, end_record, frames):
     sample_rate = wav["sample_rate"]
     block_align = wav["block_align"]
     dataNormal = wav["dataNormal"]
@@ -41,12 +39,13 @@ def overwrite(file_path, start_record, end_record, frames):
     time.sleep(1)
     # call stopRecording
     soundRecording.stopRecording(streamObj, pObj)'''
-    frames = frames[0]
+    temp = b''.join(frames)
+    frames=temp
     audio_normal = []
     for i in range(0, len(frames), block_align):
         sample = []
         for j in range(num_channels):
-            sample.append(2**(32 - bits_per_sample) * int.from_bytes(frames[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
+            sample.append(int.from_bytes(frames[i+j*4:i+(j+1)*4], byteorder='little', signed=True)) #Force 32-bit by recording mechanism
         audio_normal.append(sample)
     dataNormal_2 = np.array(audio_normal, dtype=np.int32) 
     dataArray = np.concatenate((dataNormal_1, dataNormal_2), axis=0)
@@ -56,9 +55,8 @@ def overwrite(file_path, start_record, end_record, frames):
 if __name__ == "__main__":
     # call record, get frames
     # call overwrite to concatenate
-    frames = overwrite("example.wav", 1, 2, new_record)
+    #frames = overwrite("example.wav", 1, 2, new_record)
     # call fileWriting to write file
-    soundRecording.fileWriting(frames, 2, 44100, 'example_edit.wav')
-
-    frames = edit("test.wav", 0, 1, 1, 2)
-    soundRecording.fileWriting(frames, 2, 44100, 'example_edit.wav')
+    wav = playback.getData("exampleMono.wav")
+    frames = edit(wav, 0, 2, 2, 2)
+    soundRecording.fileWriting(frames, wav["num_channels"], wav["sample_rate"], 'example_trim.wav')
