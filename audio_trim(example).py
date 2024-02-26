@@ -32,13 +32,7 @@ def overwrite(wav, start_record, end_record, frames):
     bits_per_sample = wav["bits_per_sample"]
     dataNormal_1 = dataNormal[:int(start_record * sample_rate)]
     dataNormal_3 = dataNormal[int(end_record * sample_rate):]
-    '''# call startRecording
-    streamObj, pObj = soundRecording.startRecording(44100, 1024, 2, 1)
-    # call threadWriting, get frames
-    frames = soundRecording.threadWriting(streamObj, 1024)
-    time.sleep(1)
-    # call stopRecording
-    soundRecording.stopRecording(streamObj, pObj)'''
+
     temp = b''.join(frames)
     frames=temp
     audio_normal = []
@@ -53,10 +47,20 @@ def overwrite(wav, start_record, end_record, frames):
     return [dataArray.astype(np.int32).tobytes()]
 
 if __name__ == "__main__":
-    # call record, get frames
-    # call overwrite to concatenate
-    #frames = overwrite("example.wav", 1, 2, new_record)
-    # call fileWriting to write file
     wav = playback.getData("exampleMono.wav")
     frames = edit(wav, 0, 2, 2, 2)
     soundRecording.fileWriting(frames, wav["num_channels"], wav["sample_rate"], 'example_trim.wav')
+
+    '''# call startRecording
+    streamObj, pObj = soundRecording.startRecording(44100, 1024, 2, 1)
+    # call threadWriting, get frames
+    new_record = soundRecording.threadWriting(streamObj, 1024)
+    time.sleep(5)
+    # call stopRecording
+    soundRecording.stopRecording(streamObj, pObj)'''
+    # call record, get frames
+    # call overwrite to concatenate
+    # call fileWriting to write file
+    wav = playback.getData("example.wav")
+    #frames = overwrite("example.wav", 1, 2, new_record)
+    soundRecording.fileWriting(frames, wav["num_channels"], wav["sample_rate"], 'example.wav') #the path should be equal to the original name
