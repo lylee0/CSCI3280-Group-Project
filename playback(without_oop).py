@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 
 def getPyAudio():
     global p
-    p = pyaudio.PyAudio()
-
-def stop():
-    p.terminate()
+    p = pyaudio.PyAudio()  
     
 def readWav(file_path):
     if file_path[-4:] == ".wav":
@@ -84,9 +81,9 @@ def getStream(wav):
     except OSError:
         sys.exit(0)
 
-def playSound(file_path, speed=1, volume=1, start=0):
+def playSound(wav, speed=1, volume=1, start=0):
     # or unpause
-    wav = getData(file_path)
+    #wav = getData(file_path)
     getPyAudio()
     global stream
     stream = getStream(wav)
@@ -115,10 +112,9 @@ def pause():
 def stop():
     stream.stop_stream()
     stream.close()
-    stop()
+    p.terminate()
 
-def visualize(file_path):
-    wav = getData(file_path, speed=1)
+def visualize(wav):
     dataArray = wav["dataNormal"]
     sample_rate = wav["sample_rate"]
     amplitude = np.max(dataArray, axis=1)
@@ -129,7 +125,8 @@ def visualize(file_path):
     plt.savefig('plot.png')
 
 if __name__ == "__main__":
-    speed = 1
+    speed = 0.5
     volume = 2
-    start = 2
-    playSound("exampleMono.wav", speed, volume, start)
+    start = 0
+    wav = getData("newTest.wav")
+    playSound(wav, speed, volume, start)
