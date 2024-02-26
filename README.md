@@ -10,6 +10,7 @@ sys
 speech_recognition
 time
 threading
+wave
 
 Sound Recording (soundRecording.py):
 1. When press "Record":
@@ -59,3 +60,7 @@ Sound Playback (playback.py):<br>
 10.2 pause()<br>
 10.3 stop()<br>
 10.4 visualize(file_path)<br>
+
+Audio Trim(audio-edit.py):
+1. Drag 2 sliders to the desired start time and end time and press Trim button:<br>
+Call audio_trim(input_file, start_time, end_time), return trimmed audio file
