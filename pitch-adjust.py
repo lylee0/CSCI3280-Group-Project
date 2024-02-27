@@ -3,6 +3,13 @@ import numpy as np
 import librosa
 
 def pitch_shift(wavfile, pitch_shift_factor):
+    """
+    Modify the pitch of audio wav file
+    Parameters:
+        - wav file: file to be changed
+        - pitch_shift_factor: -12 <= x <= 12
+    Output: pitch shifted wav file
+    """
     with open(wavfile, "rb") as file_in:
         # Extract relevant information from the header
         chunk_id = file_in.read(4) #"RIFF"
