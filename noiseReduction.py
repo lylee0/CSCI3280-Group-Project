@@ -29,7 +29,7 @@ def noiseReduction(input, output, fs):
     for i in range(0, len(data), block_align):
         sample = []
         for j in range(num_channels):
-            sample.append(int.from_bytes(data[i+j*block_align//2:i+(j+1)*block_align//2], byteorder='little', signed=True))
+            sample.append(int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
         audio.append(sample)
     working = np.array(audio, dtype=np.int32) 
     working = np.divide(working, 2**(bits_per_sample-1)-1)
@@ -80,4 +80,4 @@ def noiseReduction(input, output, fs):
                 recording.write(block)
 
 if __name__ == "__main__":
-    noiseReduction('Test Case/exampleNoise.wav', 'testing2.wav', 44100)
+    noiseReduction('Raw Test Data/32bitM.wav', 'Test Case/ENHANCE - Test for noise reduction/32bitM.wav', 44100)
