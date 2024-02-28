@@ -108,6 +108,7 @@ def playSound(wav, speed=1, volume=1, start=0):
 
 def pause():
     stream.stop_stream()
+    stream.close()
 
 def stop():
     stream.stop_stream()
