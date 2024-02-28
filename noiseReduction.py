@@ -2,7 +2,7 @@ import noisereduce as nr
 import numpy as np
 import struct
 
-def noiseReduction(input, output, fs):
+def noiseReduction(input, output):
     with open(input, "rb") as recording:
         chunk_id = recording.read(4) #"RIFF"
         chunk_size = int.from_bytes(recording.read(4), byteorder='little') #little, N+36
@@ -39,7 +39,7 @@ def noiseReduction(input, output, fs):
         tempWork[1] = [x[1] for x in working]
     working = tempWork
 
-    reduced_noise = nr.reduce_noise(y=working, sr=fs, stationary=True)
+    reduced_noise = nr.reduce_noise(y=working, sr=sample_rate, stationary=True)
 
     effected = reduced_noise
 
@@ -80,4 +80,4 @@ def noiseReduction(input, output, fs):
                 recording.write(block)
 
 if __name__ == "__main__":
-    noiseReduction('Raw Test Data/32bitM.wav', 'Test Case/ENHANCE - Test for noise reduction/32bitM.wav', 44100)
+    noiseReduction('Raw Test Data/32bitM.wav', 'Test Case/ENHANCE - Test for noise reduction/32bitM.wav')
