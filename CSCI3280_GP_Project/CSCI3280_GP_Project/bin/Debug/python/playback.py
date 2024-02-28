@@ -108,6 +108,7 @@ def play(wav, speed=1, volume=1, start=0):
     stream.write(data.astype(np.int32).tobytes())
 
 def pause():
+    global stream
     stream.stop_stream()
     stream.close()
 
