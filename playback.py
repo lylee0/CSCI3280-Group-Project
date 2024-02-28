@@ -82,7 +82,7 @@ def getStream(wav):
     except OSError:
         sys.exit(0)
 
-def playSound(wav, speed=1, volume=1, start=0):
+def play(wav, speed=1, volume=1, start=0):
     # or unpause
     #wav = getData(file_path)
     getPyAudio()
@@ -126,12 +126,12 @@ def visualize(wav):
     plt.axis('off')
     plt.savefig('plot.png')
 
-def play(wav, speed, volume, start):
-    threading.Thread(target=playSound(wav, speed, volume, start)).start()
+def playSound(wav, speed, volume, start):
+    threading.Thread(target=play(wav, speed, volume, start)).start()
 
 if __name__ == "__main__":
     speed = 0.5
     volume = 2
     start = 0
     wav = getData("newTest.wav")
-    play(wav, speed, volume, start)
+    playSound(wav, speed, volume, start)
