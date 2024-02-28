@@ -113,6 +113,6 @@ def high_pass_filter(raw_data, sample_rate):
     filtered_data = lfilter(b, a, raw_data)
     return filtered_data
 
-
-# Testing, expected result will have a shaper / clear sound
-audioEqualizer('test.wav', 2)
+if __name__ == "__main__":
+    # Testing, expected result will have a shaper / clear sound
+    audioEqualizer('test.wav', 2)
