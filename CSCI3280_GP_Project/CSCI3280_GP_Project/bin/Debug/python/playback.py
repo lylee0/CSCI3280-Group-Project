@@ -2,6 +2,7 @@ import numpy as np
 import pyaudio
 import sys
 import matplotlib.pyplot as plt
+import threading
 
 def getPyAudio():
     global p
@@ -110,10 +111,10 @@ def pause():
     stream.stop_stream()
     stream.close()
 
-def stop():
+'''def stop():
     stream.stop_stream()
     stream.close()
-    p.terminate()
+    #p.terminate()'''
 
 def visualize(wav):
     dataArray = wav["dataNormal"]
@@ -125,9 +126,12 @@ def visualize(wav):
     plt.axis('off')
     plt.savefig('plot.png')
 
+def play(wav, speed, volume, start):
+    threading.Thread(target=playSound(wav, speed, volume, start)).start()
+
 if __name__ == "__main__":
     speed = 0.5
     volume = 2
     start = 0
     wav = getData("newTest.wav")
-    playSound(wav, speed, volume, start)
+    play(wav, speed, volume, start)
