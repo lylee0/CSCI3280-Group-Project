@@ -1,16 +1,14 @@
 import struct
 import numpy as np
-from scipy.signal import butter, lfilter
+import librosa
 
-def audioEqualizer(wavfile, type):
+def pitch_shift(wavfile, pitch_shift_factor):
     """
-    Audio Effects: 
-        types
-        - Low Pass Filter: Making the sound heard 'thicker'
-        - High Pass Filter: Making the sound heard 'shaper' or 'clear'
-    Parameter:
-        - wavfile: .wav file
-        - type: integer
+    Modify the pitch of audio wav file
+    Parameters:
+        - wav file: file to be changed
+        - pitch_shift_factor: -12 <= x <= 12
+    Output: pitch shifted wav file
     """
     with open(wavfile, "rb") as file_in:
         # Extract relevant information from the header
@@ -26,7 +24,7 @@ def audioEqualizer(wavfile, type):
             raise ValueError('File is not in PCM format.')
         num_channels = int.from_bytes(file_in.read(2), byteorder='little') #little
         sample_rate = int.from_bytes(file_in.read(4), byteorder='little') #little
-
+        print(sample_rate)
         byte_rate = int.from_bytes(file_in.read(4), byteorder='little') #little
         block_align = int.from_bytes(file_in.read(2), byteorder='little') #little
         bits_per_sample = int.from_bytes(file_in.read(2), byteorder='little') #little
@@ -37,29 +35,22 @@ def audioEqualizer(wavfile, type):
         data = file_in.read(subChunkSize_2) #little
         
         file_in.close()
-
     wav_audio = []
     for i in range(0, len(data), block_align):
         sample = []
         for j in range(num_channels):
             sample.append(int.from_bytes(data[i+j*block_align//2:i+(j+1)*block_align//2], byteorder='little', signed=True))
         wav_audio.append(sample)
-
     working = np.array(wav_audio, dtype=np.int32)
     working = np.divide(working, 2**(bits_per_sample-1)-1)
-
     tmp = np.empty((len(working[0]),len(working)))
     tmp[0] = [x[0] for x in working]
-
     if len(working[0]) == 2:
         tmp[1] = [x[1] for x in working]
     working = tmp
 
-    # Choosing Filter
-    if type==1:
-        filtered_signal = low_pass_filter(working, sample_rate)
-    elif type==2:
-        filtered_signal = high_pass_filter(working, sample_rate)
+    pitch_shifted = librosa.effects.pitch_shift(working, sr=sample_rate, n_steps=pitch_shift_factor)
+
     #header chunk
     chunk_size = struct.pack('<I', chunk_size + subChunkSize_2*(32//bits_per_sample-1))
 
@@ -76,7 +67,7 @@ def audioEqualizer(wavfile, type):
     
     bits_per_sample = struct.pack('<H', 32)
 
-    with open('lptest.wav', "wb") as file_out:
+    with open('pitchtest.wav', "wb") as file_out:
         file_out.write(chunk_id)
         file_out.write(chunk_size)
         file_out.write(format)
@@ -90,29 +81,10 @@ def audioEqualizer(wavfile, type):
         file_out.write(bits_per_sample)
         file_out.write(subChunkID_2)
         file_out.write(subChunkSize_2)
-        for i in range(len(filtered_signal[0])):
-            for j in range(len(filtered_signal)):
-                block = int(filtered_signal[j][i] * (2**31-1))
+        for i in range(len(pitch_shifted[0])):
+            for j in range(len(pitch_shifted)):
+                block = int(pitch_shifted[j][i] * (2**31-1))
                 block = struct.pack('<i', block)
                 file_out.write(block)
-        file_out.close()
     
-def low_pass_filter(raw_data, sample_rate):
-    cutoff_freq = 40
-    nyquist_freq = 0.5 * sample_rate
-    order = 10
-    b, a = butter(order, cutoff_freq/nyquist_freq, btype='low')
-    filtered_data = lfilter(b, a, raw_data)
-    return filtered_data
-
-def high_pass_filter(raw_data, sample_rate):
-    cutoff_freq = 500
-    nyquist_freq = 0.5 * sample_rate
-    order = 10
-    b, a = butter(order, cutoff_freq/nyquist_freq, btype='high')
-    filtered_data = lfilter(b, a, raw_data)
-    return filtered_data
-
-
-# Testing, expected result will have a shaper / clear sound
-audioEqualizer('test.wav', 2)
+pitch_shift('Raw Test Data/16bitS.wav', -6)
