@@ -1,10 +1,13 @@
 import struct
 import numpy as np
-from scipy.signal import butter, filtfilt
+from scipy.signal import butter, lfilter
 
 def audioEqualizer(wavfile, type):
     """
-    Audio Effects: Low Pass Filter
+    Audio Effects: 
+        types
+        - Low Pass Filter: Making the sound heard 'thicker'
+        - High Pass Filter: Making the sound heard 'shaper' or 'clear'
     """
     with open(wavfile, "rb") as file_in:
         # Extract relevant information from the header
@@ -49,13 +52,11 @@ def audioEqualizer(wavfile, type):
         tmp[1] = [x[1] for x in working]
     working = tmp
 
-    # Low Pass Filter
-    cutoff_freq = 40
-    nyquist_freq = 0.5 * 1000 
-    order = 10
-    b, a = butter(order, cutoff_freq/nyquist_freq, btype='low')
-    filtered_signal = filtfilt(b, a, working)
-
+    # Choosing Filter
+    if type==1:
+        filtered_signal = low_pass_filter(working, sample_rate)
+    elif type==2:
+        filtered_signal = high_pass_filter(working, sample_rate)
     #header chunk
     chunk_size = struct.pack('<I', chunk_size + subChunkSize_2*(32//bits_per_sample-1))
 
@@ -93,4 +94,22 @@ def audioEqualizer(wavfile, type):
                 file_out.write(block)
         file_out.close()
     
-musicEqualizer('Test Case/exampleMono.wav')
+def low_pass_filter(raw_data, sample_rate):
+    cutoff_freq = 40
+    nyquist_freq = 0.5 * sample_rate
+    order = 10
+    b, a = butter(order, cutoff_freq/nyquist_freq, btype='low')
+    filtered_data = lfilter(b, a, raw_data)
+    return filtered_data
+
+def high_pass_filter(raw_data, sample_rate):
+    cutoff_freq = 500
+    nyquist_freq = 0.5 * sample_rate
+    order = 10
+    b, a = butter(order, cutoff_freq/nyquist_freq, btype='high')
+    filtered_data = lfilter(b, a, raw_data)
+    return filtered_data
+
+
+# Testing, expected result will have a shaper / clear sound
+audioEqualizer('test.wav', 2)
