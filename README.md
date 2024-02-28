@@ -57,6 +57,10 @@ Sound Playback (playback.py):<br>
 10.3 stop()<br>
 10.4 visualize(file_path)<br>
 
-Audio Trim(audio-edit.py):
-1. Drag 2 sliders to the desired start time(s) and end time(s) and press Trim button:<br>
-Call audio_trim(input_file, start_time, end_time), return trimmed audio file
+Adjust Pitch (pitch-adjust.py):
+1. A seekbar with slider or a input box can be used to get the desired adjustment from users
+2. Press 'Adjust' button
+
+Audio Effect (audio-equalizer.py):
+1. Make buttons for each types of effects
+2. Users then click 'Apply' button, pass the type of filter

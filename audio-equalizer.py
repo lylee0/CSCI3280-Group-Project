@@ -8,6 +8,9 @@ def audioEqualizer(wavfile, type):
         types
         - Low Pass Filter: Making the sound heard 'thicker'
         - High Pass Filter: Making the sound heard 'shaper' or 'clear'
+    Parameter:
+        - wavfile: .wav file
+        - type: integer
     """
     with open(wavfile, "rb") as file_in:
         # Extract relevant information from the header
