@@ -2,7 +2,7 @@ import struct
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-def musicEqualizer(wavfile):
+def audioEqualizer(wavfile, type):
     """
     Audio Effects: Low Pass Filter
     """
