@@ -6,7 +6,7 @@ import playback
 import soundRecording
 import datetime
 
-global volume, speed, start, selected_file
+global volume, speed, start, selected_file, edit_frames
 volume = 1
 speed = 1
 start = 0
@@ -31,7 +31,19 @@ def get_selected_file(event):
     if selected_file:
         global wav
         wav = playback.getData(selected_file)
-        start_time_slider.config(to=wav["duration"])
+
+def trim():
+    global wav, edit_frames
+    if selected_file:
+        start_end_slider = ttk.Scale(player_frame, from_=0, to=wav["duration"], orient=tk.HORIZONTAL, length=200)
+        start_end_slider.set("0")
+        start_end_slider.pack()
+
+def saveFile():
+    global edit_frames
+    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"recordings/record_{current_time}.wav"
+    soundRecording.fileWriting(edit_frames, 1, 44100, filename)
 
 def play_audio():
     global selected_file, wav, stream
@@ -39,7 +51,6 @@ def play_audio():
     stream = playback.getStream(wav)
     playback.play(stream, wav, speed, volume, start)
     playback.stop(stream)
-    start_time_slider.set(0)
 
 '''def time_callback(time):
     # Update the time bar value
@@ -107,14 +118,17 @@ record_button.pack(pady=5)
 pause_button = ttk.Button(player_frame, text="Pause", command=pause_audio)
 pause_button.pack(pady=5)
 
-pause_button = ttk.Button(player_frame, text="Stop Record", command=stop_record)
-pause_button.pack(pady=5)
+stop_record_button = ttk.Button(player_frame, text="Stop Record", command=stop_record)
+stop_record_button.pack(pady=5)
+
+trim_button = ttk.Button(player_frame, text="Audio Trim", command=trim)
+trim_button.pack(pady=5)
+
+save_button = ttk.Button(player_frame, text="Save", command=saveFile)
+save_button.pack(pady=5)
 
 player_frame = ttk.Frame(root)
 player_frame.pack(side=tk.LEFT, padx=10)
-
-start_time_slider = ttk.Scale(player_frame, from_=0, to=0, orient=tk.HORIZONTAL, length=200)
-start_time_slider.pack(pady=5)
 
 listbox.bind("<<ListboxSelect>>", get_selected_file)
 #start_time_slider.bind("<<ButtonRelease-1>>", on_slider_moved)
