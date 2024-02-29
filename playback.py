@@ -32,7 +32,7 @@ def readWav(file_path):
                 raise ValueError('Invalid WAV file.')
             subChunkSize_2 = int.from_bytes(recording.read(4), byteorder='little') #little
             data = recording.read(subChunkSize_2) #little
-            recording.close()      
+            recording.close()     
 
             return {"chunk_id": chunk_id, "chunk_size": chunk_size, "format": format,
                     "subChunkID_1": subChunkID_1, "subChunkSize_1": subChunkSize_1,
@@ -68,6 +68,7 @@ def getData(file_path):
             sample.append(int((audio_normal[i][j] + audio_normal[i+1][j])/2))
         audio_double.append(sample)
     wav["dataDouble"] = np.array(audio_double, dtype=np.int32)
+    wav["duration"] = int(len(wav["dataNormal"]) // wav["sample_rate"])
 
     return wav
 
@@ -82,13 +83,9 @@ def getStream(wav):
     except OSError:
         sys.exit(0)
 
-def play(wav, speed=1, volume=1, start=0):
+def play(stream, wav, speed=1, volume=1, start=0):
     # or unpause
     #wav = getData(file_path)
-    getPyAudio()
-    global stream
-    stream = getStream(wav)
-
     sample_rate = wav["sample_rate"]
     if speed == 1:
         dataNormal = wav["dataNormal"]
@@ -104,17 +101,17 @@ def play(wav, speed=1, volume=1, start=0):
         data = data[int(start * sample_rate * 2):]
     else:
         raise ValueError('Invalid speed.')
-        
+    
     stream.write(data.astype(np.int32).tobytes())
 
-def pause():
+def pause(stream):
     stream.stop_stream()
-    stream.close()
+    #stream.close()
 
-'''def stop():
+def stop(stream):
     stream.stop_stream()
     stream.close()
-    #p.terminate()'''
+    #p.terminate()
 
 def visualize(wav):
     dataArray = wav["dataNormal"]
@@ -126,8 +123,8 @@ def visualize(wav):
     plt.axis('off')
     plt.savefig('plot.png')
 
-def playSound(wav, speed, volume, start):
-    threading.Thread(target=play(wav, speed, volume, start)).start()
+def playSound(stream, wav, speed, volume, start):
+    threading.Thread(target=play(stream, wav, speed, volume, start)).start()
 
 if __name__ == "__main__":
     speed = 0.5
