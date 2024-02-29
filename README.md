@@ -57,10 +57,15 @@ Sound Playback (playback.py):<br>
 10.3 stop()<br>
 10.4 visualize(file_path)<br>
 
+Audio Trim (audio_trim.py):
+1. edit(wav, start, end, speed, volume)
+2. overwrite(wav, start_record, end_record, frames) # frames is the newly recorded audio
+3. There should be a 2-end slider controlling the start time and end time
+
 Adjust Pitch (pitch-adjust.py): # input -12 to 12, default 0
 1. A seekbar with slider or a input box can be used to get the desired adjustment from users
 2. Press 'Adjust' button
 
-Audio Effect (audio-equalizer.py): # input 1 for low pass filter or 2 for high pass filter, 
+Audio Effect (audio-equalizer.py): # input 1 for low pass filter or 2 for high pass filter
 1. Make buttons for each types of effects
 2. Users then click 'Apply' button, pass the type of filter
