@@ -12,6 +12,8 @@ time
 threading
 wave
 
+Default value: sample_rate=44100, num_channels=1, speed=1, volume=1, start=0, (end=wav["duration"])
+
 Sound Recording (soundRecording.py):
 1. When press "Record":<br>
 1.1. Call startRecording(fs, chunk, channel, device index), get two return object [streamObj, pObj]<br>
@@ -34,7 +36,7 @@ Sound Playback (playback.py):<br>
 2. Play Sound:<br>
 2.1 Call playSound(wav, speed, volume, start)<br>
 3. Change Volume:<br>
-3.1 Change value of volume # volume can be in range 0.01 to 3, default is 1<br>
+3.1 Change value of volume # volume can be in range 0.5 to 2, default is 1<br>
 3.2 Call playSound(wav, speed, volume, start) # volume is the input<br>
 4. Change Speed (2x):<br>
 4.1 speed = 2<br>
@@ -49,9 +51,10 @@ Sound Playback (playback.py):<br>
 7.2 Call playSound(wav, speed, volume, start)<br>
 
 Audio Trim (audio_trim.py):
-1. edit(wav, start, end, speed, volume)
+1. edit(wav, start, end, speed, volume) # default: start=0, end=duration, speed=1, volume=1
 2. overwrite(wav, start_record, end_record, frames) # frames is the newly recorded audio
 3. There should be a 2-end slider controlling the start time and end time
+4. When doing overwrite, the record sample_rate and num_channels should be aligned with the selected file
 
 Adjust Pitch (pitch-adjust.py): # input -12 to 12, default 0
 1. A seekbar with slider or a input box can be used to get the desired adjustment from users
