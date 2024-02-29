@@ -1,14 +1,17 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Label
+from PIL import ImageTk, Image
 import os
 import threading
 import playback
 import soundRecording
 import noiseReduction
 import speechToTextLib
+import audio_trim
 import datetime
 
-global volume, speed, start, selected_file, edit_frames
+global input_device, volume, speed, start, end, selected_file, edit_frames
+input_device = 1
 volume = 1
 speed = 1
 start = 0
@@ -27,40 +30,72 @@ def update_listbox():
     root.after(1000, update_listbox)
 
 def get_selected_file(event):
-    global selected_file
+    global selected_file, speed
     selected_file = listbox.get(listbox.curselection())
     selected_file = "recordings/" + selected_file
     if selected_file:
+        speed = 1
         global wav
         wav = playback.getData(selected_file)
+        start_slider.configure(from_=0, to=wav["duration"])
+        start_slider.set(0)
         playback.visualize(wav)
+        image_label = Label(player_frame)
+        image_label.grid(row=0, column=1)
+
+        # Load the image
+        image = Image.open("plot.png")
+        resized_image = image.resize((200, 200))  # Resize the image if needed
+        tk_image = ImageTk.PhotoImage(resized_image)
+
+        # Set the image in the Label widget
+        image_label.config(image=tk_image)
 
 def trim():
     global wav, edit_frames
     if selected_file:
-        save_button = ttk.Button(player_frame, text="Save", command=saveFile)
+        start_end_slider.configure(to=wav["duration"])
         save_button.pack(pady=5)
-        start_end_slider = ttk.Scale(player_frame, from_=0, to=wav["duration"], orient=tk.HORIZONTAL, length=200)
-        start_end_slider.set("0")
-        start_end_slider.pack()
+        normal_button.pack(pady=5)
+        double_button.pack(pady=5)
+        half_button.pack(pady=5)
+        volume_slider.set(1)
+        volume_slider.pack()
 
 def overwrite():
     if selected_file:
-        save_button = ttk.Button(player_frame, text="Save", command=saveFile)
-        save_button.pack(pady=5)
-        start_end_slider = ttk.Scale(player_frame, from_=0, to=wav["duration"], orient=tk.HORIZONTAL, length=200)
-        start_end_slider.set("0")
+        start_end_slider.configure(to=wav["duration"])
+        start_end_slider.set(0)
         start_end_slider.pack()
+        record_button.pack(pady=5)
+        stop_overwrite_button.pack(pady=5)
+
+def stop_overwrite():
+    if selected_file:
+        filename = f"{selected_file[:-4]}_overwrite.wav"
+        global streamObj, pObj, frames, start, end
+        soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
+        start = 1 # to change
+        end = 2
+        new_frames = audio_trim.overwrite(wav, start, end, frames)
+        soundRecording.fileWriting(new_frames, 1, 44100, filename)
+        update_listbox()
 
 def saveFile():
-    global edit_frames
-    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"recordings/record_{current_time}.wav"
-    soundRecording.fileWriting(edit_frames, 1, 44100, filename)
-    update_listbox()
+    global edit_frames, wav, end, speed, volume
+    start = 0 # to change
+    end = 2
+    volume = volume_slider.get()
+    if selected_file:
+        filename = f"{selected_file[:-4]}_trim.wav"
+        edit_frames = audio_trim.edit(wav, start, end, speed, volume)
+        soundRecording.fileWriting(edit_frames, 1, 44100, filename)
+        update_listbox()
 
 def play_audio():
-    global selected_file, wav, stream
+    global selected_file, wav, volume, start, stream
+    start = start_slider.get()
+    volume = volume_slider.get()
     print(f"Playing {selected_file}")
     stream = playback.getStream(wav)
     playback.play(stream, wav, speed, volume, start)
@@ -80,30 +115,61 @@ def to_text():
         print(text)
 
 def play_mode():
-    play_button = ttk.Button(player_frame, text="Play", command=play_audio_thread)
-    pause_button = ttk.Button(player_frame, text="Pause", command=pause_audio)
-    double_button = ttk.Button(player_frame, text="2x", command=doubleSpeed)
-    half_button = ttk.Button(player_frame, text="0.5x", command=halfSpeed)
-    text_button = ttk.Button(player_frame, text="Translate to Text", command=to_text)
-    volume_slider = ttk.Scale(player_frame, from_=0.5, to=2, orient=tk.HORIZONTAL, length=200)
-    volume_slider.set("1")
+    record_button.pack_forget()
+    stop_record_button.pack_forget()
+    trim_button.pack_forget()
+    overwrite_button.pack_forget()
+    noise_reduction_button.pack_forget()
+    save_button.pack_forget()
+    start_end_slider.pack_forget()
+    stop_overwrite_button.pack_forget()
+
+    volume_slider.set(1)
     play_button.pack(pady=5)
+    normal_button.pack(pady=5)
     double_button.pack(pady=5)
     half_button.pack(pady=5)
     pause_button.pack(pady=5)
     text_button.pack(pady=5)
     volume_slider.pack()
+    start_slider.pack()
 
 def record_mode():
-    record_button = ttk.Button(player_frame, text="Record", command=record_audio)
-    stop_record_button = ttk.Button(player_frame, text="Stop Record", command=stop_record)
+    play_button.pack_forget()
+    normal_button.pack_forget()
+    double_button.pack_forget()
+    half_button.pack_forget()
+    pause_button.pack_forget()
+    text_button.pack_forget()
+    volume_slider.pack_forget()
+    start_slider.pack_forget()
+    record_button.pack_forget()
+    stop_record_button.pack_forget()
+    trim_button.pack_forget()
+    overwrite_button.pack_forget()
+    noise_reduction_button.pack_forget()
+    save_button.pack_forget()
+    start_end_slider.pack_forget()
+    stop_overwrite_button.pack_forget()
+
     record_button.pack(pady=5)
     stop_record_button.pack(pady=5)
 
 def edit_mode():
-    trim_button = ttk.Button(player_frame, text="Audio Trim", command=trim)
-    overwrite_button = ttk.Button(player_frame, text="Overwrite", command=overwrite)
-    noise_reduction_button = ttk.Button(player_frame, text="Reduce Noise", command=reduce_noise)
+    play_button.pack_forget()
+    double_button.pack_forget()
+    half_button.pack_forget()
+    normal_button.pack_forget()
+    pause_button.pack_forget()
+    text_button.pack_forget()
+    volume_slider.pack_forget()
+    start_slider.pack_forget()
+    record_button.pack_forget()
+    stop_record_button.pack_forget()
+    save_button.pack_forget()
+    start_end_slider.pack_forget()
+    stop_overwrite_button.pack_forget()
+
     trim_button.pack(pady=5)
     overwrite_button.pack(pady=5)
     noise_reduction_button.pack(pady=5)
@@ -113,13 +179,15 @@ def edit_mode():
     time_bar['value'] = time'''
 
 def play_audio_thread():
-    #play_button.config(state=tk.DISABLED)
+    
     threading.Thread(target=play_audio).start()
+    #if thread.isAlive():
+    #    play_button.config(state=tk.DISABLED)
 
 def record_audio():
     print("Recording audio")
-    global streamObj, pObj, frames
-    streamObj, pObj = soundRecording.startRecording(44100, 1024, 1, 1) #initiate, para = fs, chunk, channel
+    global streamObj, pObj, frames, input_device
+    streamObj, pObj = soundRecording.startRecording(44100, 1024, 1, input_device) #initiate, para = fs, chunk, channel
     frames = soundRecording.threadWriting(streamObj, 1024) #keep writing, para = stream object, chunk
     #update_listbox()
 
@@ -132,8 +200,13 @@ def stop_record():
     update_listbox()
 
 def pause_audio():
+    global stream
     print("Pausing audio")
     playback.pause(stream)
+
+def normalSpeed():
+    global speed
+    speed = 1
 
 def doubleSpeed():
     global speed
@@ -179,6 +252,27 @@ play_mode_button = ttk.Button(player_frame, text="Play Mode", command=play_mode)
 record_mode_button = ttk.Button(player_frame, text="Record Mode", command=record_mode)
 
 edit_mode_button = ttk.Button(player_frame, text="Edit Mode", command=edit_mode)
+
+play_button = ttk.Button(player_frame, text="Play", command=play_audio_thread)
+pause_button = ttk.Button(player_frame, text="Pause", command=pause_audio)
+normal_button = ttk.Button(player_frame, text="1x", command=normalSpeed)
+double_button = ttk.Button(player_frame, text="2x", command=doubleSpeed)
+half_button = ttk.Button(player_frame, text="0.5x", command=halfSpeed)
+text_button = ttk.Button(player_frame, text="Translate to Text", command=to_text)
+volume_slider = ttk.Scale(player_frame, from_=0, to=3, orient=tk.HORIZONTAL, length=200)
+start_slider = ttk.Scale(player_frame, from_=0, to=10, orient=tk.HORIZONTAL, length=200)
+
+record_button = ttk.Button(player_frame, text="Record", command=record_audio)
+stop_record_button = ttk.Button(player_frame, text="Stop Record", command=stop_record)
+
+trim_button = ttk.Button(player_frame, text="Audio Trim", command=trim)
+overwrite_button = ttk.Button(player_frame, text="Overwrite", command=overwrite)
+stop_overwrite_button = ttk.Button(player_frame, text="Stop Overwrite", command=stop_overwrite)
+noise_reduction_button = ttk.Button(player_frame, text="Reduce Noise", command=reduce_noise)
+
+save_button = ttk.Button(player_frame, text="Save", command=saveFile)
+
+start_end_slider = ttk.Scale(player_frame, from_=0, to=200, orient=tk.HORIZONTAL, length=200)
 
 play_mode_button.pack(pady=5)
 record_mode_button.pack(pady=5)
