@@ -1,6 +1,6 @@
 import struct
 import numpy as np
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, filtfilt
 
 def audioEqualizer(wavfile, type):
     """
@@ -42,7 +42,7 @@ def audioEqualizer(wavfile, type):
     for i in range(0, len(data), block_align):
         sample = []
         for j in range(num_channels):
-            sample.append(int.from_bytes(data[i+j*block_align//2:i+(j+1)*block_align//2], byteorder='little', signed=True))
+            sample.append(int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
         wav_audio.append(sample)
 
     working = np.array(wav_audio, dtype=np.int32)
@@ -58,7 +58,7 @@ def audioEqualizer(wavfile, type):
     # Choosing Filter
     if type==1:
         filtered_signal = low_pass_filter(working, sample_rate)
-    elif type==2:
+    if type==2:
         filtered_signal = high_pass_filter(working, sample_rate)
     #header chunk
     chunk_size = struct.pack('<I', chunk_size + subChunkSize_2*(32//bits_per_sample-1))
@@ -76,7 +76,7 @@ def audioEqualizer(wavfile, type):
     
     bits_per_sample = struct.pack('<H', 32)
 
-    with open('lptest.wav', "wb") as file_out:
+    with open('32bitM.wav', "wb") as file_out:
         file_out.write(chunk_id)
         file_out.write(chunk_size)
         file_out.write(format)
@@ -99,10 +99,10 @@ def audioEqualizer(wavfile, type):
     
 def low_pass_filter(raw_data, sample_rate):
     cutoff_freq = 40
-    nyquist_freq = 0.5 * sample_rate
+    nyquist_freq = 0.5 * 1000
     order = 10
     b, a = butter(order, cutoff_freq/nyquist_freq, btype='low')
-    filtered_data = lfilter(b, a, raw_data)
+    filtered_data = filtfilt(b, a, raw_data)
     return filtered_data
 
 def high_pass_filter(raw_data, sample_rate):
@@ -110,9 +110,9 @@ def high_pass_filter(raw_data, sample_rate):
     nyquist_freq = 0.5 * sample_rate
     order = 10
     b, a = butter(order, cutoff_freq/nyquist_freq, btype='high')
-    filtered_data = lfilter(b, a, raw_data)
+    filtered_data = filtfilt(b, a, raw_data)
     return filtered_data
 
 
 # Testing, expected result will have a shaper / clear sound
-audioEqualizer('test.wav', 2)
+audioEqualizer('Raw Test Data/32bitM.wav', 1)
