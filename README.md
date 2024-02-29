@@ -33,29 +33,20 @@ Sound Playback (playback.py):<br>
 1.4 Call visualize(wav) # plot.png is saved, which is the waveform of audio<br>
 2. Play Sound:<br>
 2.1 Call playSound(wav, speed, volume, start)<br>
-3. Pause:<br>
-3.1 Call pause()<br>
-4. Unpause:<br>
-4.1 Call playSound(wav, speed, volume, start)<br>
-5. Change Volume:<br>
-5.1 Change value of volume # volume can be in range 0.01 to 3, default is 1<br>
-5.2 Call playSound(wav, speed, volume, start) # volume is the input<br>
-6. Change Speed (2x):<br>
-6.1 speed = 2<br>
-6.2 Call playSound(wav, speed, volume, start)<br>
-7. Change Speed (0.5x):<br>
-7.1 speed = 0.5<br>
+3. Change Volume:<br>
+3.1 Change value of volume # volume can be in range 0.01 to 3, default is 1<br>
+3.2 Call playSound(wav, speed, volume, start) # volume is the input<br>
+4. Change Speed (2x):<br>
+4.1 speed = 2<br>
+4.2 Call playSound(wav, speed, volume, start)<br>
+5. Change Speed (0.5x):<br>
+5.1 speed = 0.5<br>
+5.2 Call playSound(wav, speed, volume, start)<br>
+6. Replay:<br>
+6.1 Call vplaySound(wav, speed, volume, start) # get current speed and volume<br>
+7. Replay from another time<br>
+7.1 Change value of start (in second)<br>
 7.2 Call playSound(wav, speed, volume, start)<br>
-8. Replay:<br>
-8.1 Call vplaySound(wav, speed, volume, start) # get current speed and volume<br>
-9. Replay from another time<br>
-9.1 Change value of start (in second)<br>
-9.2 Call playSound(wav, speed, volume, start)<br>
-9. When end:<br>
-9.1 Call stop()<br>
-10.2 pause()<br>
-10.3 stop()<br>
-10.4 visualize(file_path)<br>
 
 Audio Trim (audio_trim.py):
 1. edit(wav, start, end, speed, volume)
