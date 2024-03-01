@@ -76,7 +76,9 @@ def audioEqualizer(wavfile, type):
     
     bits_per_sample = struct.pack('<H', 32)
 
-    with open('32bitM.wav', "wb") as file_out:
+    fileName = wavfile.split('.')[0]
+
+    with open(f'{fileName}_32bitM.wav', "wb") as file_out:
         file_out.write(chunk_id)
         file_out.write(chunk_size)
         file_out.write(format)
@@ -115,4 +117,4 @@ def high_pass_filter(raw_data, sample_rate):
 
 
 # Testing, expected result will have a shaper / clear sound
-audioEqualizer('Raw Test Data/32bitM.wav', 1)
+#audioEqualizer('Raw Test Data/32bitM.wav', 1)
