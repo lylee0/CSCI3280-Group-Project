@@ -1,7 +1,7 @@
 # CSCI3280-Group-Project
 Peer-to-Peer Voice Chat System
 
-Library required (plz add the list if new library used):
+0. Library required:
 struct
 numpy
 noisereduce
@@ -10,7 +10,16 @@ sys
 speech_recognition
 time
 threading
-wave
+scipy
+pyqt5
+qtrangeslider
+os
+PIL
+datetime
+time
+librosa
+matplotlib
+
 
 Default value: sample_rate=44100, num_channels=1, speed=1, volume=1, start=0, (end=wav["duration"])
 
