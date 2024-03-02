@@ -2,7 +2,7 @@ import struct
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-def audioEqualizer(wavfile, type):
+def audioEqualizer(wavfile, type, file):
     """
     Audio Effects: 
         types
@@ -78,7 +78,7 @@ def audioEqualizer(wavfile, type):
 
     fileName = wavfile.split('.')[0]
 
-    with open(f'{fileName}_32bitM.wav', "wb") as file_out:
+    with open(file, "wb") as file_out:
         file_out.write(chunk_id)
         file_out.write(chunk_size)
         file_out.write(format)
