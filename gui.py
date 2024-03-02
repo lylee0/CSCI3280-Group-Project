@@ -818,7 +818,6 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
-global w
 w = MainWindow()
 w.show()
 app.exec_()
