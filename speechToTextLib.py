@@ -135,15 +135,14 @@ def speechToText(path):
             audio2 = sr.AudioFile(path[:-4] + "_temp2.wav")
     else:                                        
         audio = sr.AudioFile(path)
+        print("hi")
     try:
         with audio as source:
-            r.adjust_for_ambient_noise(source)
             audio = r.record(source)         
             result = r.recognize_google(audio)
         if org_num == 2:
             try: 
                 with audio2 as source2:
-                    r.adjust_for_ambient_noise(source2)
                     audio2 = r.record(source2)         
                     result2 = r.recognize_google(audio2)
                 return "Channel 1: " + result + "; Channel 2: " + result2
@@ -154,4 +153,4 @@ def speechToText(path):
         return "The voice is too soft or google cannot recognize the audio"
 
 if __name__ == "__main__":
-    print(speechToText('recordings/record_20240302_120413.wav'))
+    print(speechToText('recordings/32bitS_temp1.wav'))
