@@ -2,7 +2,7 @@ import struct
 import numpy as np
 import librosa
 
-def pitch_shift(wavfile, pitch_shift_factor):
+def pitch_shift(wavfile, pitch_shift_factor, file):
     """
     Modify the pitch of audio wav file
     Parameters:
@@ -67,7 +67,7 @@ def pitch_shift(wavfile, pitch_shift_factor):
     
     bits_per_sample = struct.pack('<H', 32)
 
-    with open('pitchtest.wav', "wb") as file_out:
+    with open(file, "wb") as file_out:
         file_out.write(chunk_id)
         file_out.write(chunk_size)
         file_out.write(format)
