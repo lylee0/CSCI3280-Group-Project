@@ -671,16 +671,18 @@ class MainWindow(QMainWindow):
         #recording button
         self.recordingButton = QPushButton()
         self.recordingButton.setText("Recording")
-        self.recordingButton.clicked.connect(self.record_audio)
+        self.recordingButton.setStyleSheet("background-color: rgb(144,238,144);")
+        #self.recordingButton.clicked.connect(self.record_audio)
+        self.recordingButton.clicked.connect(self.recording_function)
 
         lowerLayout.addWidget(self.recordingButton)
 
         #stop recording button
-        stopRecordingButton = QPushButton()
-        stopRecordingButton.setText("Stop")
-        stopRecordingButton.clicked.connect(self.stop_record)
+        #stopRecordingButton = QPushButton()
+        #stopRecordingButton.setText("Stop")
+        #stopRecordingButton.clicked.connect(self.stop_record)
 
-        lowerLayout.addWidget(stopRecordingButton)
+        #lowerLayout.addWidget(stopRecordingButton)
 
         #audio time text
         self.audioTimeText = QLabel()
@@ -699,12 +701,12 @@ class MainWindow(QMainWindow):
         lowerLayout.addWidget(playButton)
 
         #pause button
-        pauseButton = QPushButton()
-        pauseButton.setText("Pause")
+        #pauseButton = QPushButton()
+        #pauseButton.setText("Pause")
 
-        pauseButton.clicked.connect(self.pause_audio)
+        #pauseButton.clicked.connect(self.pause_audio)
 
-        lowerLayout.addWidget(pauseButton)
+        #lowerLayout.addWidget(pauseButton)
 
         #audio speed choice
         audioSpeedChoice = QComboBox()
@@ -735,6 +737,7 @@ class MainWindow(QMainWindow):
         if self.recording == 0:
             self.recording = 1
             self.recordingButton.setText("Recording - Live")
+            self.recordingButton.setStyleSheet("background-color: rgb(144,238,144);")
             print("Recording audio")
             global streamObj, pObj, frames, input_device
             streamObj, pObj = soundRecording.startRecording(44100, 1024, number_of_channel, input_device) #initiate, para = fs, chunk, channel
@@ -748,6 +751,7 @@ class MainWindow(QMainWindow):
         if self.recording == 1:
             self.recording = 0
             self.recordingButton.setText("Recording")
+            self.recordingButton.setStyleSheet("")
             current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"recordings/record_{current_time}.wav"
             global streamObj, pObj, frames
@@ -758,6 +762,27 @@ class MainWindow(QMainWindow):
             popup_message = QMessageBox()
             popup_message.setText("You have to start a recording first!")
             popup_message.exec_()
+
+    def recording_function(self):
+        global streamObj, pObj, frames, input_device
+        if self.recording == 0:
+            self.recording = 1
+            self.recordingButton.setText("Stop")
+            self.recordingButton.setStyleSheet("background-color: rgb(255,0,0);")
+            print("Recording audio")
+            
+            streamObj, pObj = soundRecording.startRecording(44100, 1024, number_of_channel, input_device) #initiate, para = fs, chunk, channel
+            frames = soundRecording.threadWriting(streamObj, 1024)
+        else:
+            self.recording = 0
+            self.recordingButton.setText("Recording")
+            self.recordingButton.setStyleSheet("background-color: rgb(144,238,144);")
+            current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"recordings/record_{current_time}.wav"
+            soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
+            soundRecording.fileWriting(frames, number_of_channel, 44100, filename)
+            self.recordingContent.addItem(f"record_{current_time}.wav")
+
 
     def channel_change(self, channel_index):
         global number_of_channel
