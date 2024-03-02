@@ -2,7 +2,7 @@ import speech_recognition as sr
 import numpy as np
 import struct
 
-def speechToText(path):  
+def speechToText(path):
     r = sr.Recognizer()  
     with open(path, "rb") as recording:
         chunk_id = recording.read(4) #"RIFF"
@@ -133,17 +133,25 @@ def speechToText(path):
                         recording2.write(block)                                  
             audio = sr.AudioFile(path[:-4] + "_temp1.wav")                     
             audio2 = sr.AudioFile(path[:-4] + "_temp2.wav")
-    else:                                           
+    else:                                        
         audio = sr.AudioFile(path)
-    with audio as source:
-        audio = r.record(source)         
-        result = r.recognize_google(audio)
-    if org_num == 2:
-        with audio2 as source2:
-            audio2 = r.record(source2)         
-            result2 = r.recognize_google(audio2)
-        return "Channel 1: " + result + "; Channel 2: " + result2
-    return result
+    try:
+        with audio as source:
+            r.adjust_for_ambient_noise(source)
+            audio = r.record(source)         
+            result = r.recognize_google(audio)
+        if org_num == 2:
+            try: 
+                with audio2 as source2:
+                    r.adjust_for_ambient_noise(source2)
+                    audio2 = r.record(source2)         
+                    result2 = r.recognize_google(audio2)
+                return "Channel 1: " + result + "; Channel 2: " + result2
+            except:
+                return "The voice is too soft or google cannot recognize the audio"
+        return result
+    except:
+        return "The voice is too soft or google cannot recognize the audio"
 
 if __name__ == "__main__":
-    print(speechToText('Raw Test Data/16bitS.wav'))
+    print(speechToText('recordings/record_20240302_120413.wav'))

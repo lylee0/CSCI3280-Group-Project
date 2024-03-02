@@ -69,6 +69,7 @@ def getData(file_path):
         audio_double.append(sample)
     wav["dataDouble"] = np.array(audio_double, dtype=np.int32)
     wav["duration"] = int(len(wav["dataNormal"]) // wav["sample_rate"])
+    wav["duration_float"] = len(wav["dataNormal"]) / wav["sample_rate"]
 
     return wav
 

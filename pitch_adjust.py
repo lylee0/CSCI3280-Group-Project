@@ -24,7 +24,6 @@ def pitch_shift(wavfile, pitch_shift_factor, file):
             raise ValueError('File is not in PCM format.')
         num_channels = int.from_bytes(file_in.read(2), byteorder='little') #little
         sample_rate = int.from_bytes(file_in.read(4), byteorder='little') #little
-        print(sample_rate)
         byte_rate = int.from_bytes(file_in.read(4), byteorder='little') #little
         block_align = int.from_bytes(file_in.read(2), byteorder='little') #little
         bits_per_sample = int.from_bytes(file_in.read(2), byteorder='little') #little
@@ -39,7 +38,7 @@ def pitch_shift(wavfile, pitch_shift_factor, file):
     for i in range(0, len(data), block_align):
         sample = []
         for j in range(num_channels):
-            sample.append(int.from_bytes(data[i+j*block_align//2:i+(j+1)*block_align//2], byteorder='little', signed=True))
+            sample.append(int.from_bytes(data[i+j*block_align//num_channels:i+(j+1)*block_align//num_channels], byteorder='little', signed=True))
         wav_audio.append(sample)
     working = np.array(wav_audio, dtype=np.int32)
     working = np.divide(working, 2**(bits_per_sample-1)-1)
@@ -49,7 +48,11 @@ def pitch_shift(wavfile, pitch_shift_factor, file):
         tmp[1] = [x[1] for x in working]
     working = tmp
 
+    print(working)
+
     pitch_shifted = librosa.effects.pitch_shift(working, sr=sample_rate, n_steps=pitch_shift_factor)
+
+    print(pitch_shifted)
 
     #header chunk
     chunk_size = struct.pack('<I', chunk_size + subChunkSize_2*(32//bits_per_sample-1))
@@ -86,3 +89,6 @@ def pitch_shift(wavfile, pitch_shift_factor, file):
                 block = int(pitch_shifted[j][i] * (2**31-1))
                 block = struct.pack('<i', block)
                 file_out.write(block)
+
+if __name__ == "__main__":
+    pitch_shift("recordings/record_20240302_141852.wav", 10, "recordings/record_20240302_141852_shift.wav")

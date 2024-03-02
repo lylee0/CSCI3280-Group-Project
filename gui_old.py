@@ -38,9 +38,6 @@ class AudioTrimWindow(QWidget):
         self.end = end
         self.speed = 1
         self.volume = 1
-
-        self.start_label = QLabel()
-        self.end_label = QLabel()
         
         self.rangeSlider = QRangeSlider(Qt.Horizontal)
         self.volumeSlider = QSlider(Qt.Horizontal)
@@ -62,34 +59,30 @@ class AudioTrimWindow(QWidget):
         #range slider
         self.rangeSlider = QRangeSlider(Qt.Horizontal)
         self.rangeSlider.setMinimum(0)
-        self.rangeSlider.setMaximum(int(self.end*100))
-
-        print(self.end)
+        self.rangeSlider.setMaximum(self.end)
         
-        self.rangeSlider.setValue([0, int(self.end*100)])
-        self.rangeSlider.valueChanged.connect(self.value_changed)
+        self.rangeSlider.setValue([0, self.end])
 
         layout.addWidget(self.rangeSlider)
 
         #time text
         time_text_layout = QHBoxLayout()
 
-        self.start_label = QLabel()
-        self.start_label.setText("00:00:00.00")
-        self.start_label.setStyleSheet("QLabel{font-size: 10pt;}")
+        start_label = QLabel()
+        start_label.setText("00:00:00")
+        start_label.setStyleSheet("QLabel{font-size: 10pt;}")
 
-        time_text_layout.addWidget(self.start_label)
+        time_text_layout.addWidget(start_label)
 
-        self.end_label = QLabel()
+        end_label = QLabel()
         end_hour = int(self.end / 3600)
         end_minute = int((self.end - end_hour * 3600) / 60)
         end_second = int((self.end - end_hour % 3600) % 60)
-        end_ms = int(((self.end - end_hour * 3600) % 60 - end_second) *100)
-        self.end_label.setText(f"{end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
-        self.end_label.setStyleSheet("QLabel{font-size: 10pt;}")
-        self.end_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        end_label.setText(f"{end_hour:02d}:{end_minute:02d}:{end_second:02d}")
+        end_label.setStyleSheet("QLabel{font-size: 10pt;}")
+        end_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         
-        time_text_layout.addWidget(self.end_label)
+        time_text_layout.addWidget(end_label)
 
         layout.addLayout(time_text_layout)
 
@@ -140,18 +133,6 @@ class AudioTrimWindow(QWidget):
 
         self.setLayout(layout)
 
-    def value_changed(self):
-        current_hour = int(self.rangeSlider.value()[0] / 360000)
-        current_minute = int((self.rangeSlider.value()[0] - current_hour * 360000) / 6000)
-        current_second = int((self.rangeSlider.value()[0] - current_hour * 360000) % 6000) // 100
-        current_ms = int(int((self.rangeSlider.value()[0] - current_hour * 360000) % 6000) % 100)
-        current_end_hour = int(self.rangeSlider.value()[1] / 360000)
-        current_end_minute = int((self.rangeSlider.value()[1] - current_hour * 360000) / 6000)
-        current_end_second = int((self.rangeSlider.value()[1] - current_hour * 360000) % 6000) // 100
-        current_end_ms = int(int((self.rangeSlider.value()[1] - current_hour * 360000) % 6000)%100)
-        self.start_label.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d}.{current_ms:02d}")
-        self.end_label.setText(f"{current_end_hour:02d}:{current_end_minute:02d}:{current_end_second:02d}.{current_end_ms:02d}")
-    
     def speed_change(self, speed_index):
         if speed_index == 0:
             self.speed = 0.5
@@ -168,12 +149,11 @@ class AudioTrimWindow(QWidget):
         global wav, selected_file
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         fileName = selected_file.split('.')[0]
-        displayFileName = fileName.split('/')[1]
-        start = self.rangeSlider.value()[0]/100
-        end = self.rangeSlider.value()[1]/100
+        start = self.rangeSlider.value()[0]
+        end = self.rangeSlider.value()[1]
         trim_audio = audio_trim.edit(wav, start, end, self.speed, self.volume)
-        soundRecording.fileWriting(trim_audio, wav["num_channels"], wav["sample_rate"], f"{fileName}_{current_time}_trim.wav")
-        w.recordingContent.addItem(f"{displayFileName}_{current_time}_trim.wav")
+        soundRecording.fileWriting(trim_audio, 1, wav["sample_rate"], f"{fileName}_{current_time}_trim.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_trim.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -206,8 +186,6 @@ class PitchAdjustWindow(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(-12)
         self.slider.setMaximum(12)
-        self.slider.setToolTip("Current value: " + str(self.slider.value()))
-        self.slider.valueChanged.connect(self.value_changed)
 
         layout.addWidget(self.slider)
 
@@ -249,19 +227,15 @@ class PitchAdjustWindow(QWidget):
 
         self.setLayout(layout)
 
-    def value_changed(self):
-        self.slider.setToolTip("Current value: " + str(self.slider.value()))
-    
     def save_button_function(self):
         global selected_file
         #start = self.rangeSlider.value()[0]
         #end = self.rangeSlider.value()[1]
         fileName = selected_file.split('.')[0]
-        displayFileName = fileName.split('/')[1]
         shift = self.slider.value()
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         pitch_adjust.pitch_shift(selected_file, shift, f"{fileName}_{current_time}_pitch_{shift}.wav")
-        w.recordingContent.addItem(f"{displayFileName}_{current_time}_pitch_{shift}.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_pitch_{shift}.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -277,13 +251,6 @@ class OverWriteWindow(QWidget):
         self.input_device = 1
 
         self.rangeSlider = QRangeSlider(Qt.Horizontal)
-
-        
-        self.start_label = QLabel()
-        self.end_label = QLabel()
-
-        self.recording = 0
-        self.recordingButton = QPushButton()
 
         self.initUI()
         
@@ -301,32 +268,30 @@ class OverWriteWindow(QWidget):
         #range slider
         self.rangeSlider = QRangeSlider(Qt.Horizontal)
         self.rangeSlider.setMinimum(0)
-        self.rangeSlider.setMaximum(int(self.end*100))
+        self.rangeSlider.setMaximum(self.end)
         
-        self.rangeSlider.setValue([0, int(self.end*100)])
-        self.rangeSlider.valueChanged.connect(self.value_changed)
+        self.rangeSlider.setValue([0, self.end])
 
         layout.addWidget(self.rangeSlider)
 
         #time text
         time_text_layout = QHBoxLayout()
 
-        self.start_label = QLabel()
-        self.start_label.setText("00:00:00.00")
-        self.start_label.setStyleSheet("QLabel{font-size: 10pt;}")
+        start_label = QLabel()
+        start_label.setText("00:00:00")
+        start_label.setStyleSheet("QLabel{font-size: 10pt;}")
 
-        time_text_layout.addWidget(self.start_label)
+        time_text_layout.addWidget(start_label)
 
-        self.end_label = QLabel()
+        end_label = QLabel()
         end_hour = int(self.end / 3600)
         end_minute = int((self.end - end_hour * 3600) / 60)
         end_second = int((self.end - end_hour % 3600) % 60)
-        end_ms = int(((self.end - end_hour * 3600) % 60 - end_second) *100)
-        self.end_label.setText(f"{end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
-        self.end_label.setStyleSheet("QLabel{font-size: 10pt;}")
-        self.end_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        end_label.setText(f"{end_hour:02d}:{end_minute:02d}:{end_second:02d}")
+        end_label.setStyleSheet("QLabel{font-size: 10pt;}")
+        end_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         
-        time_text_layout.addWidget(self.end_label)
+        time_text_layout.addWidget(end_label)
 
         layout.addLayout(time_text_layout)
 
@@ -344,11 +309,11 @@ class OverWriteWindow(QWidget):
         layout.addWidget(deviceChoices)
 
         #recording button
-        self.recordingButton = QPushButton()
-        self.recordingButton.setText("Recording")
-        self.recordingButton.clicked.connect(self.record_audio)
+        recordingButton = QPushButton()
+        recordingButton.setText("Recording")
+        recordingButton.clicked.connect(self.record_audio)
 
-        layout.addWidget(self.recordingButton)
+        layout.addWidget(recordingButton)
 
         #stop recording button
         stopRecordingButton = QPushButton()
@@ -359,60 +324,28 @@ class OverWriteWindow(QWidget):
 
         self.setLayout(layout)
     
-    
-    def value_changed(self):
-        current_hour = int(self.rangeSlider.value()[0] / 360000)
-        current_minute = int((self.rangeSlider.value()[0] - current_hour * 360000) / 6000)
-        current_second = int((self.rangeSlider.value()[0] - current_hour * 360000) % 6000) // 100
-        current_ms = int(int((self.rangeSlider.value()[0] - current_hour * 360000) % 6000) % 100)
-        current_end_hour = int(self.rangeSlider.value()[1] / 360000)
-        current_end_minute = int((self.rangeSlider.value()[1] - current_hour * 360000) / 6000)
-        current_end_second = int((self.rangeSlider.value()[1] - current_hour * 360000) % 6000) // 100
-        current_end_ms = int(int((self.rangeSlider.value()[1] - current_hour * 360000) % 6000)%100)
-        self.start_label.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d}.{current_ms:02d}")
-        self.end_label.setText(f"{current_end_hour:02d}:{current_end_minute:02d}:{current_end_second:02d}.{current_end_ms:02d}")
-    
     def device_change(self, device_index):
         self.input_device = device_index
 
     def record_audio(self):
-        if self.recording == 0:
-            self.recording = 1
-            print("Recording audio")
-            self.recordingButton.setText("Recording - Live")
-            global streamObj, pObj, frames, input_device,wav
-            streamObj, pObj = soundRecording.startRecording(44100, 1024, wav["num_channels"], self.input_device) #initiate, para = fs, chunk, channel
-            frames = soundRecording.threadWriting(streamObj, 1024)
-        else:
-            popup_message = QMessageBox()
-            popup_message.setText("You are recording already!")
-            popup_message.exec_()
-
+        print("Recording audio")
+        global streamObj, pObj, frames, input_device
+        streamObj, pObj = soundRecording.startRecording(44100, 1024, 1, self.input_device) #initiate, para = fs, chunk, channel
+        frames = soundRecording.threadWriting(streamObj, 1024)
     
     def stop_record(self):
-        if self.recording == 1:
-            global selected_file
-            selected_file_name = selected_file.split('.')[0]
-            selected_file_name = selected_file_name.split('/')[1]
-            self.recording = 0
-            self.recordingButton.setText("Recording")
-            current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"recordings/{selected_file_name}_{current_time}_overwrite.wav"
-            displayFilename = f"{selected_file_name}_{current_time}_overwrite.wav"
-            global streamObj, pObj, frames, wav
-            start_record = self.rangeSlider.value()[0]/100
-            end_record = self.rangeSlider.value()[1]/100
-            soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
-            new_frames = audio_trim.overwrite(wav, start_record, end_record, frames)
-            soundRecording.fileWriting(new_frames, wav["num_channels"], wav["sample_rate"], filename)
-            w.recordingContent.addItem(displayFilename)
-            popup_message = QMessageBox()
-            popup_message.setText("file save")
-            popup_message.exec_()
-        else:
-            popup_message = QMessageBox()
-            popup_message.setText("You have to start a recording first!")
-            popup_message.exec_()
+        current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"recordings/record_{current_time}_overwrite.wav"
+        global streamObj, pObj, frames, wav
+        start_record = self.rangeSlider.value()[0]
+        end_record = self.rangeSlider.value()[1]
+        soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
+        new_frames = audio_trim.overwrite(wav, start_record, end_record, frames)
+        soundRecording.fileWriting(new_frames, wav["num_channels"], wav["sample_rate"], filename)
+        w.recordingContent.addItem(filename)
+        popup_message = QMessageBox()
+        popup_message.setText("file save")
+        popup_message.exec_()
 
 class EqualizerWindow(QWidget):
     def __init__(self):
@@ -458,10 +391,9 @@ class EqualizerWindow(QWidget):
     def low_pass_filter_button_function(self):
         global selected_file
         fileName = selected_file.split('.')[0]
-        displayFileName = fileName.split('/')[1]
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         audio_equalizer.audioEqualizer(f'{selected_file}', 1, f"{fileName}_{current_time}_lowPass.wav")
-        w.recordingContent.addItem(f"{displayFileName}_{current_time}_lowPass.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_lowPass.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -469,10 +401,9 @@ class EqualizerWindow(QWidget):
     def high_pass_filter_button_function(self):
         global selected_file
         fileName = selected_file.split('.')[0]
-        displayFileName = fileName.split('/')[1]
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         audio_equalizer.audioEqualizer(f'{selected_file}', 2, f"{fileName}_{current_time}_highPass.wav")
-        w.recordingContent.addItem(f"{displayFileName}_{current_time}_highPass.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_highPass.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -482,7 +413,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sound Recorder")
-        self.showMaximized() 
+        self.setFixedSize(1800, 900)
 
         playback.getPyAudio()
 
@@ -491,8 +422,6 @@ class MainWindow(QMainWindow):
         self.waveGraph = QLabel()
         self.audioTimeText = QLabel()
         self.volumeSlider = QSlider(Qt.Horizontal)
-        self.recordingButton = QPushButton()
-        self.recording = 0
 
         self.audioTrimWindow = AudioTrimWindow(0)
         self.pitchAdjustWindow = PitchAdjustWindow()
@@ -647,8 +576,8 @@ class MainWindow(QMainWindow):
         channelChoices = QComboBox()
         channelChoices.setStyleSheet("QComboBox{font-size: 8pt;}")
 
-        channelChoices.addItem("Mono Sound Recording")
-        channelChoices.addItem("Stereo Sound Recording")
+        channelChoices.addItem("1")
+        channelChoices.addItem("2")
 
         channelChoices.setCurrentIndex(0)
         channelChoices.currentIndexChanged.connect(self.channel_change)
@@ -669,11 +598,11 @@ class MainWindow(QMainWindow):
         lowerLayout.addWidget(deviceChoices)
 
         #recording button
-        self.recordingButton = QPushButton()
-        self.recordingButton.setText("Recording")
-        self.recordingButton.clicked.connect(self.record_audio)
+        recordingButton = QPushButton()
+        recordingButton.setText("Recording")
+        recordingButton.clicked.connect(self.record_audio)
 
-        lowerLayout.addWidget(self.recordingButton)
+        lowerLayout.addWidget(recordingButton)
 
         #stop recording button
         stopRecordingButton = QPushButton()
@@ -732,32 +661,18 @@ class MainWindow(QMainWindow):
             self.recordingContent.addItem(item)
     
     def record_audio(self):
-        if self.recording == 0:
-            self.recording = 1
-            self.recordingButton.setText("Recording - Live")
-            print("Recording audio")
-            global streamObj, pObj, frames, input_device
-            streamObj, pObj = soundRecording.startRecording(44100, 1024, number_of_channel, input_device) #initiate, para = fs, chunk, channel
-            frames = soundRecording.threadWriting(streamObj, 1024)
-        else:
-            popup_message = QMessageBox()
-            popup_message.setText("You are recording already!")
-            popup_message.exec_()
+        print("Recording audio")
+        global streamObj, pObj, frames, input_device
+        streamObj, pObj = soundRecording.startRecording(44100, 1024, number_of_channel, input_device) #initiate, para = fs, chunk, channel
+        frames = soundRecording.threadWriting(streamObj, 1024)
     
     def stop_record(self):
-        if self.recording == 1:
-            self.recording = 0
-            self.recordingButton.setText("Recording")
-            current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"recordings/record_{current_time}.wav"
-            global streamObj, pObj, frames
-            soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
-            soundRecording.fileWriting(frames, number_of_channel, 44100, filename)
-            self.recordingContent.addItem(f"record_{current_time}.wav")
-        else:
-            popup_message = QMessageBox()
-            popup_message.setText("You have to start a recording first!")
-            popup_message.exec_()
+        current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"recordings/record_{current_time}.wav"
+        global streamObj, pObj, frames
+        soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
+        soundRecording.fileWriting(frames, number_of_channel, 44100, filename)
+        self.recordingContent.addItem(f"record_{current_time}.wav")
 
     def channel_change(self, channel_index):
         global number_of_channel
@@ -786,9 +701,9 @@ class MainWindow(QMainWindow):
             global wav
             wav = playback.getData(selected_file)
             self.slider.setValue(0)
-            value = wav["duration_float"]
+            value = int(wav["duration"])
             end = value
-            self.slider.setMaximum(int(value * 100))
+            self.slider.setMaximum(value)
             self.slider.setSliderPosition(0)
             self.slider.update()
             self.slider.repaint()
@@ -797,9 +712,8 @@ class MainWindow(QMainWindow):
             self.waveGraph.setPixmap(pixmap)
             end_hour = int(end / 3600)
             end_minute = int((end - end_hour * 3600) / 60)
-            end_second = int((end - end_hour * 3600) % 60)
-            end_ms = int(((end - end_hour * 3600) % 60 - end_second) *100)
-            self.audioTimeText.setText(f"00:00:00.00 / {end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
+            end_second = int((end - end_hour % 3600) % 60)
+            self.audioTimeText.setText(f"00:00:00 / {end_hour:02d}:{end_minute:02d}:{end_second:02d}")
             print(selected_file)
 
     def play_audio(self):
@@ -818,32 +732,28 @@ class MainWindow(QMainWindow):
         global end, stop_thread, speed
         stop_thread = False
         current_value = self.slider.value()
-        current_hour = int(current_value / 360000)
-        current_minute = int((current_value - current_hour * 360000) / 6000)
-        current_second = int((current_value - current_hour * 360000) % 6000) // 100
-        current_ms = int(((current_value - current_hour * 360000) % 6000) % 100)
+        current_hour = int(current_value / 3600)
+        current_minute = int((current_value - current_hour * 3600) / 60)
+        current_second = int((current_value - current_hour * 3600) % 60)
 
         end_hour = int(end / 3600)
         end_minute = int((end - end_hour * 3600) / 60)
         end_second = int((end - end_hour % 3600) % 60)
-        end_ms = int(((end - end_hour * 3600) % 60 - end_second) *100)
-        self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d}.{current_ms:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
-        while((current_value + 2)/100 < end):
-            #print(f"{current_value} / {end}")
-            time.sleep(0.02 / speed)
-            current_value += 2
+        self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}")
+        while(current_value < end):
+            print(f"{current_value} / {end}")
+            time.sleep(1 / speed)
+            current_value += 1
             self.slider.setValue(current_value)
             self.slider.setSliderPosition(current_value)
             self.slider.update()
             self.slider.repaint()
-            current_hour = int(current_value / 360000)
-            current_minute = int((current_value - current_hour * 360000) / 6000)
-            current_second = int((current_value - current_hour * 360000) % 6000) // 100
-            current_ms = int(((current_value - current_hour * 360000) % 6000) % 100)
-            self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d}.{current_ms:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
+            current_hour = int(current_value / 3600)
+            current_minute = int((current_value - current_hour * 3600) / 60)
+            current_second = int((current_value - current_hour * 3600) % 60)
+            self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}")
             if stop_thread == True:
                 return
-        self.slider.setSliderPosition(0)
 
     def pause_audio(self):
         global stream, stop_thread
@@ -854,16 +764,14 @@ class MainWindow(QMainWindow):
     def audio_slider_move(self):
         global start, end
         current_value = self.slider.value()
-        current_hour = int(current_value / 360000)
-        current_minute = int((current_value - current_hour * 360000) / 6000)
-        current_second = int((current_value - current_hour * 360000) % 6000) // 100
-        current_ms = int(((current_value - current_hour * 360000) % 6000) % 100)
+        current_hour = int(current_value / 3600)
+        current_minute = int((current_value - current_hour * 3600) / 60)
+        current_second = int((current_value - current_hour * 3600) % 60)
 
         end_hour = int(end / 3600)
         end_minute = int((end - end_hour * 3600) / 60)
         end_second = int((end - end_hour % 3600) % 60)
-        end_ms = int(((end - end_hour * 3600) % 60 - end_second) *100)
-        self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d}.{current_ms:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}.{end_ms:02d}")
+        self.audioTimeText.setText(f"{current_hour:02d}:{current_minute:02d}:{current_second:02d} / {end_hour:02d}:{end_minute:02d}:{end_second:02d}")
 
 
     def volume_slider_move(self):
@@ -900,18 +808,17 @@ class MainWindow(QMainWindow):
     def noise_reduction_button_function(self, checked):
         global selected_file
         fileName = selected_file.split('.')[0]
-        displayFileName = fileName.split('/')[1]
-        current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        noiseReduction.noiseReduction(selected_file, f"{fileName}_{current_time}_reduced_noise.wav")
+        noiseReduction.noiseReduction(selected_file, f"{fileName}_reduced_noise.wav")
         popup_message = QMessageBox()
-        popup_message.setText(f"file save as {fileName}_{current_time}_reduced_noise.wav")
+        popup_message.setText(f"file save as {fileName}_reduced_noise.wav")
         popup_message.exec_()
-        self.recordingContent.addItem(f"{displayFileName}_{current_time}_reduced_noise.wav")
+        self.recordingContent.addItem(f"{fileName}_reduced_noise.wav")
             
        
 
 
 app = QApplication(sys.argv)
+global w
 w = MainWindow()
 w.show()
 app.exec_()
