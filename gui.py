@@ -804,7 +804,7 @@ class MainWindow(QMainWindow):
 
     def play_audio(self):
         global selected_file, wav, volume, start, stream
-        start = self.slider.value()
+        start = self.slider.value()/100
         #volume = volume_slider.get()
         print(f"Playing {selected_file}")
         stream = playback.getStream(wav)
@@ -812,8 +812,15 @@ class MainWindow(QMainWindow):
         thread.start()
         playback.play(stream, wav, speed, volume, start)
         playback.stop(stream)
+        #play = Thread(target = self.playAudio, args=(stream, wav, speed, volume, start))
+        #play.start()
 
 
+    #def playAudio(stream, wav, speed, volume, start):
+        #playback.play(stream, wav, speed, volume, start)
+        #playback.stop(stream)
+
+    
     def slider_move(self):
         global end, stop_thread, speed
         stop_thread = False
