@@ -118,7 +118,7 @@ def visualize(wav):
     dataArray = wav["dataNormal"]
     sample_rate = wav["sample_rate"]
     amplitude = np.max(dataArray, axis=1)
-    time = len(amplitude) // sample_rate
+    time = len(amplitude) / sample_rate
     plt.figure(figsize=(10,5))
     plt.plot(np.linspace(0, time, num=len(amplitude)), amplitude, color='royalblue')
     plt.axis('off')
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     speed = 0.5
     volume = 2
     start = 0
-    wav = getData("newTest.wav")
-    playSound(wav, speed, volume, start)
+    wav= getData("recordings/record_20240302_164145_20240302_164358_trim.wav")
+    visualize(wav)
