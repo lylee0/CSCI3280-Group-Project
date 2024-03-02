@@ -86,5 +86,3 @@ def pitch_shift(wavfile, pitch_shift_factor, file):
                 block = int(pitch_shifted[j][i] * (2**31-1))
                 block = struct.pack('<i', block)
                 file_out.write(block)
-    
-pitch_shift('Raw Test Data/16bitS.wav', -6)
