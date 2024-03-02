@@ -153,6 +153,7 @@ class AudioTrimWindow(QWidget):
         end = self.rangeSlider.value()[1]
         trim_audio = audio_trim.edit(wav, start, end, self.speed, self.volume)
         soundRecording.fileWriting(trim_audio, 1, wav["sample_rate"], f"{fileName}_{current_time}_trim.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_trim.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -234,6 +235,7 @@ class PitchAdjustWindow(QWidget):
         shift = self.slider.value()
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         pitch_adjust.pitch_shift(selected_file, shift, f"{fileName}_{current_time}_pitch_{shift}.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_pitch_{shift}.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -340,6 +342,7 @@ class OverWriteWindow(QWidget):
         soundRecording.stopRecording(streamObj, pObj) #stop writing, para = stream object, audio object
         new_frames = audio_trim.overwrite(wav, start_record, end_record, frames)
         soundRecording.fileWriting(new_frames, wav["num_channels"], wav["sample_rate"], filename)
+        w.recordingContent.addItem(filename)
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -390,6 +393,7 @@ class EqualizerWindow(QWidget):
         fileName = selected_file.split('.')[0]
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         audio_equalizer.audioEqualizer(f'{selected_file}', 1, f"{fileName}_{current_time}_lowPass.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_lowPass.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -399,6 +403,7 @@ class EqualizerWindow(QWidget):
         fileName = selected_file.split('.')[0]
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         audio_equalizer.audioEqualizer(f'{selected_file}', 2, f"{fileName}_{current_time}_highPass.wav")
+        w.recordingContent.addItem(f"{fileName}_{current_time}_highPass.wav")
         popup_message = QMessageBox()
         popup_message.setText("file save")
         popup_message.exec_()
@@ -813,6 +818,7 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
+global w
 w = MainWindow()
 w.show()
 app.exec_()
