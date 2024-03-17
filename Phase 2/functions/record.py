@@ -11,6 +11,7 @@ import time
 import datetime
 import struct
 import sys
+from pydub import AudioSegment
 
 # record
 # pause
@@ -36,25 +37,34 @@ def stop():
     # get stream through record
     current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     audio_filename = f"audio_{current_time}.wav"
-    frames = mergeAudio()
+    frames = mergeAudio(streams, channel, fs, bits_per_sample)
     fileWriting(frames, channel, fs, audio_filename)
     vidio_filename = f"video_{current_time}.mp4"
     pass
 
-def mergeAudio(streams):
+def mergeAudio(streams, channel, fs, bits_per_sample):
     # suppose streams is a list of all users'stream
-    streams_array = toNumpyArray(streams, )
+    #streams_array = toNumpyArray(streams, )
     #frames = []
-    '''for i in range(channel):
-        frames_channel = streams_array[len(streams_array)-1][i]
-        for j in range(len(streams_array)-1):
-            
-            streams_array[j][i] # merge with frames_channel'''
-    frames = np.vstack(streams_array)
+    #for i in range(channel):
+    frames_channel = streams[len(streams)-1]
+    #frames_channel = streams_array[len(streams_array)-1]
+    #frames_channel = frames_channel.astype(np.int32).tobytes()
+    for j in range(len(streams)-1):
+        stream1_audio = AudioSegment(data=frames_channel, sample_width=bits_per_sample, frame_rate=fs, channels=channel) # to be fixed?
+
+        stream2_audio = AudioSegment(data=streams[j], sample_width=bits_per_sample, frame_rate=fs, channels=channel)
+
+        frames_channel = stream1_audio.overlay(stream2_audio)
+        frames_channel = frames_channel.raw_data
+    #frames = np.vstack(streams_array)
     #frames_channel = frames_channel.astype(np.int32).tobytes()
     #frames.append(frames_channel)
-    frames = [frame.astype(np.int32).tobytes() for frame in frames]
-    return frames
+
+    # Save the mixed audio to a file
+    #frames_channel.export("mixed_audio.wav", format="wav")
+    #frames = [frame.astype(np.int32).tobytes() for frame in frames]
+    return frames_channel
 
 def toNumpyArray(streams, block_align, num_channels, bits_per_sample):
     frames = []
