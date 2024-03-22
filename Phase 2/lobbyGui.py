@@ -3,9 +3,13 @@ import PyQt5.QtCore as QtC
 import PyQt5.QtGui as QtG
 import os
 from datetime import datetime
+import asyncio
 import websockets
-import threading
+import json
 import time
+import nest_asyncio
+
+
 
 class chatData:
     def __init__(self, id, name, lastChatTime, lastMessage, pinned, conv, parti):
@@ -16,37 +20,80 @@ class chatData:
         self.pin = pinned
         self.conv = conv
         self.parti = parti
+    def __eq__(self, other):
+        return self.id == other.id and self.name == other.name and self.lCT == other.lCT and self.lM == other.lM and self.pin==other.pin and self.conv == other.conv and self.parti == other.parti
 
 class convData:
     def __init__(self, parti, conv, time):
         self.parti =  parti
         self.conv = conv
         self.time = time
+    def __eq__(self, other):
+        return self.parti==other.parti and self.conv == other.conv and self.time==other.time
 
+serverData = []
 
-ChatA = convData("Ken", "Let's have a call. This call aims to discuss the project milestones that we've set last time. Would be good if everyone can join the meeting.", "22:05 2022/01/05")
+User = ""
 
-ChatB = convData("Jason", "Sure", "22:05 2022/01/05")
+async def getInitialList(uri):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send("Read")
+            data = await websocket.recv()
+            return data
+        
+async def getInitialProfile(uri):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send("Get,+++" + User)
+            data = await websocket.recv()
+            return data
+        
+data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://localhost:8765'))
 
-ChatC = convData("@SYSTEM", "Call started", "22:05 2022/01/05")
+data =json.loads(data)
 
-ChatD = convData("@SYSTEM", "Call ended", "22:15 2022/01/05")
+network = data["User"]
 
-chatHistoryCollection = [ChatA, ChatB, ChatC, ChatD]
-
-TestA = chatData(1,"TestA", "22:05 2022/01/05", "Call ended", True, chatHistoryCollection, ["Ken", "Jason"])
-
-ChatD = convData("Ken", "Testing", "22:15 2022/01/05")
-
-TestB = chatData(2,"TestB", "22:05 2022/01/05", "Ken: Testing", False, [ChatD], ["Ken"])
-
-serverData = [TestA, TestB]
+for x in data["chatRoom"]:
+    if User in x["pinnedBy"]:
+        pin = True
+    else:
+        pin = False
+    temp2 = []
+    for y in x["conv"]:
+        temp = convData(y[0],y[1],y[2])
+        temp2.append(temp)
+    temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+    serverData.append(temp3)
 
 chatDataCollection = serverData.copy()
 
-network = ["Ken", "Jason", "Amy", "Tom"]
-
-User = "Ken"
+class initialWindow(QtW.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Chat Room Lobby")
+        self.resize(200,100)
+        temp = QtW.QVBoxLayout()
+        question = QtW.QLabel("Enter your user name:")
+        response = QtW.QLineEdit()
+        temp.addWidget(question)
+        temp.addWidget(response)
+        self.setLayout(temp)
+        response.returnPressed.connect(lambda: self.prompt(response.text()))
+        self.show()
+    
+    def prompt(self, text):
+        global network
+        if text in network:
+            fail = QtW.QMessageBox()
+            fail.setIcon(QtW.QMessageBox.Critical)
+            fail.setText("User with same name already online: " + text)
+            fail.exec_()
+        else:
+            global User
+            User = text
+            network.append(User)
+            asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://localhost:8765'))
+            self.close()
 
 class lobbyWindow(QtW.QMainWindow):
     def __init__(self):
@@ -59,10 +106,17 @@ class lobbyWindow(QtW.QMainWindow):
         self.newChatWindow.status_signal.connect(self.newChatAction)
         self.chatRoomList()
         self.chatRoomDetail()
+        self.timer = QtC.QTimer()
+        self.timer.timeout.connect(self.getRefresh)
+        self.timer.start(1000)
         self.show()
-
+    
+    def dummy(self):
+        print("H")
+    
     def chatRoomList(self):
         self.pinExpand = QtW.QLabel()
+        self.searchField = QtW.QLineEdit()
         self.pinExpandInd = True
         self.otherExpand = QtW.QLabel()
         self.otherExpandInd = True
@@ -96,13 +150,12 @@ class lobbyWindow(QtW.QMainWindow):
     
     def searchBar(self):
         searchBar = QtW.QVBoxLayout()
-        searchField = QtW.QLineEdit()
-        searchField.setPlaceholderText("Search Chat Name...")
-        searchField.setFixedHeight(20)
-        searchField.setStyleSheet("background-color: None")
-        searchField.setText(self.filter)
-        searchField.returnPressed.connect(lambda: self.search(searchField.text()))
-        searchBar.addWidget(searchField)
+        self.searchField.setPlaceholderText("Search Chat Name...")
+        self.searchField.setFixedHeight(20)
+        self.searchField.setStyleSheet("background-color: None")
+        self.searchField.setText(self.filter)
+        self.searchField.returnPressed.connect(lambda: self.search(self.searchField.text()))
+        searchBar.addWidget(self.searchField)
         return searchBar
 
     def pinChat(self, showContent):
@@ -254,6 +307,7 @@ class lobbyWindow(QtW.QMainWindow):
             self.filter = ""
             self.pinContent = []
             self.otherContent = []
+            self.searchField = QtW.QLineEdit()
             self.listLayout.addLayout(self.functionBar())
             self.listLayout.addLayout(self.searchBar())
             self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
@@ -266,6 +320,7 @@ class lobbyWindow(QtW.QMainWindow):
             self.filter = text
             self.pinContent = []
             self.otherContent = []
+            self.searchField = QtW.QLineEdit()
             self.listLayout.addLayout(self.functionBar())
             self.listLayout.addLayout(self.searchBar())
             self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
@@ -290,7 +345,12 @@ class lobbyWindow(QtW.QMainWindow):
         self.detail.setStyleSheet("background-color:#81b69d")
 
     def infoBar(self, chatRoom):
-        if(chatRoom == 0):
+        if chatRoom != 0:
+            tempID = [x for x in serverData if x.id == chatRoom][0]
+            userInRoom = User in tempID.parti
+        else:
+            userInRoom = False
+        if(chatRoom == 0) or not userInRoom:
             temp = QtW.QVBoxLayout()
             tempL = QtW.QLabel()
             tempL.setFixedHeight(0)
@@ -336,25 +396,50 @@ class lobbyWindow(QtW.QMainWindow):
             return temp
 
     def content(self, chatRoom):
-        if(chatRoom == 0):
+        if chatRoom != 0:
+            tempID = [x for x in serverData if x.id == chatRoom][0]
+            userInRoom = User in tempID.parti
+        else:
+            userInRoom = False
+        if(chatRoom == 0) or not userInRoom:
             notiBox = QtW.QVBoxLayout()
             temp1 = QtW.QLabel()
             noti = QtW.QLabel()
             demoPic = QtW.QLabel()
-            demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\ghost.png").scaled(QtC.QSize(250, 250)))
-            demoPic.setFixedSize(250,250)
-            noti.setText("Nothing here...")
+            if chatRoom == 0:
+                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\ghost.png").scaled(QtC.QSize(250, 250)))
+                demoPic.setFixedSize(250,250)
+                noti.setText("Nothing here...")
+            else:
+                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\sleep.png").scaled(QtC.QSize(250, 250)))
+                demoPic.setFixedSize(250,250)
+                noti.setText("Stop sleeping on it...")
             noti.setFixedHeight(30)
             noti.setFont(QtG.QFont('Times', 20))
             noti2 = QtW.QLabel()
-            noti2.setText("Select a chat room from the list to start...")
+            if chatRoom == 0:
+                noti2.setText("Select a chat room from the list to start...")
+            else:
+                noti2.setText("You have to join this room to engage in discussion here!")
             noti2.setFixedHeight(30)
             noti2.setFont(QtG.QFont('Times', 20))
             temp2 = QtW.QLabel()
+            if chatRoom != 0:
+                tempHL = QtW.QHBoxLayout()
+                joinRoom = QtW.QPushButton("Join now")
+                joinRoom.clicked.connect(self.joinRoom)
+                joinRoom.resize(100,50)
+                joinRoom.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
+                joinRoom.setStyleSheet("border: 1px solid black; font-size:25px; background-color: #f5bcbc")
+                tempHL.addWidget(QtW.QLabel())
+                tempHL.addWidget(joinRoom)
+                tempHL.addWidget(QtW.QLabel())
             notiBox.addWidget(temp1)
             notiBox.addWidget(demoPic, alignment=QtC.Qt.AlignmentFlag.AlignHCenter)
             notiBox.addWidget(noti, alignment=QtC.Qt.AlignmentFlag.AlignHCenter)
             notiBox.addWidget(noti2, alignment=QtC.Qt.AlignmentFlag.AlignHCenter)
+            if chatRoom !=0:
+                notiBox.addLayout(tempHL)
             notiBox.addWidget(temp2)
             return notiBox
         else:
@@ -412,7 +497,12 @@ class lobbyWindow(QtW.QMainWindow):
             return tempF
     
     def chatBox(self, chatRoom):
-        if(chatRoom == 0):
+        if chatRoom != 0:
+            tempID = [x for x in serverData if x.id == chatRoom][0]
+            userInRoom = User in tempID.parti
+        else:
+            userInRoom = False
+        if(chatRoom == 0) or not userInRoom:
             temp = QtW.QVBoxLayout()
             tempL = QtW.QLabel()
             tempL.setFixedHeight(0)
@@ -441,15 +531,78 @@ class lobbyWindow(QtW.QMainWindow):
             temp.addLayout(temp2)
             return temp
 
+    async def sendUpdate(self, uri, id, method, item, content):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
+            data = await websocket.recv()
+            return data
+   
+    async def sendRead(self, uri):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"Read")
+            data = await websocket.recv()
+            return data
+
+    async def transformation(self, data):
+        global serverData, chatDataCollection, network
+
+        serverData = []
+        chatDataCollection = []
+
+        data =json.loads(data)
+
+        network = data["User"]
+
+        for x in data["chatRoom"]:
+            if User in x["pinnedBy"]:
+                pin = True
+            else:
+                pin = False
+            temp2 = []
+            for y in x["conv"]:
+                temp = convData(y[0],y[1],y[2])
+                temp2.append(temp)
+            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+            serverData.append(temp3)
+
+        chatDataCollection = serverData.copy()
     
+    def joinRoom(self):
+        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "add", "parti", User))
+        self.transformation(data)
+        self.removeLayout(self.listLayout)
+        self.pinContent = []
+        self.otherContent = []
+        self.searchField = QtW.QLineEdit()
+        self.listLayout.addLayout(self.functionBar())
+        self.listLayout.addLayout(self.searchBar())
+        self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
+        self.listLayout.addLayout(self.otherChat(self.otherExpandInd))
+        self.listLayout.setSpacing(5)
+        self.fflag = True
+        self.removeLayout(self.detailLayout)
+        self.sendButton = QtW.QLabel()
+        self.sendButton.setGeometry(0,0,0,0)
+        self.textContext = QtW.QLineEdit()
+        self.textContext.setGeometry(0,0,0,0)
+        self.detailLayout.addLayout(self.infoBar(self.currRoom))
+        self.detailLayout.addLayout(self.content(self.currRoom))
+        self.detailLayout.addLayout(self.chatBox(self.currRoom))
+        self.textContext.setText("")
+
     def addMessage(self):
         if self.textContext.text() != "":
             [x for x in chatDataCollection if x.id == self.currRoom][0].conv.append(convData(User, self.textContext.text(), datetime.now().strftime("%H:%M %Y/%m/%d")))
             [x for x in chatDataCollection if x.id == self.currRoom][0].lCT = datetime.now().strftime("%H:%M %Y/%m/%d")
             [x for x in chatDataCollection if x.id == self.currRoom][0].lM = User + ": " + self.textContext.text()
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "add", "conv", f"{User}&+&{self.textContext.text()}&+&" + str(datetime.now().strftime("%H:%M %Y/%m/%d"))))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "change", "lCT", datetime.now().strftime("%H:%M %Y/%m/%d")))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "change", "lM", User + ": " + self.textContext.text()))
+            self.transformation(data)
             self.removeLayout(self.listLayout)
             self.pinContent = []
             self.otherContent = []
+            self.searchField = QtW.QLineEdit()
             self.listLayout.addLayout(self.functionBar())
             self.listLayout.addLayout(self.searchBar())
             self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
@@ -484,6 +637,7 @@ class lobbyWindow(QtW.QMainWindow):
             self.removeLayout(self.listLayout)
             self.pinContent = []
             self.otherContent = []
+            self.searchField = QtW.QLineEdit()
             self.listLayout.addLayout(self.functionBar())
             self.listLayout.addLayout(self.searchBar())
             self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
@@ -496,7 +650,7 @@ class lobbyWindow(QtW.QMainWindow):
         self.list.setGeometry(0,0,300,self.height())
         self.detail.setGeometry(300,0,self.width()-300,self.height())
         QtW.QMainWindow.resizeEvent(self, event)
-
+    
     def mousePressEvent(self, event):
         #For Room Selection
         if self.fflag:
@@ -548,12 +702,57 @@ class lobbyWindow(QtW.QMainWindow):
             self.removeLayout(self.listLayout)
             self.pinContent = []
             self.otherContent = []
+            self.searchField = QtW.QLineEdit()
             self.listLayout.addLayout(self.functionBar())
             self.listLayout.addLayout(self.searchBar())
             self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
             self.listLayout.addLayout(self.otherChat(self.otherExpandInd))
             self.listLayout.setSpacing(5)
             self.fflag = True
+
+    def getRefresh(self):
+        data = asyncio.get_event_loop().run_until_complete(self.sendRead('ws://localhost:8765'))
+        data = json.loads(data)
+        global network, chatDataCollection, serverData
+        temp10 = serverData.copy()
+        serverData = []
+        network = data["User"]
+        for x in data["chatRoom"]:
+            if User in x["pinnedBy"]:
+                pin = True
+            else:
+                pin = False
+            temp2 = []
+            for y in x["conv"]:
+                temp = convData(y[0],y[1],y[2])
+                temp2.append(temp)
+            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+            serverData.append(temp3)
+        if temp10 != serverData:
+            chatDataCollection = serverData.copy()
+            temp = self.textContext.text()
+            temp2 = self.searchField.text()
+            self.removeLayout(self.listLayout)
+            self.searchField = QtW.QLineEdit()
+            self.pinContent = []
+            self.otherContent = []
+            self.listLayout.addLayout(self.functionBar())
+            self.listLayout.addLayout(self.searchBar())
+            self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
+            self.listLayout.addLayout(self.otherChat(self.otherExpandInd))
+            self.listLayout.setSpacing(5)
+            self.fflag = True
+            self.removeLayout(self.detailLayout)
+            self.sendButton = QtW.QLabel()
+            self.sendButton.setGeometry(0,0,0,0)
+            self.textContext = QtW.QLineEdit()
+            self.textContext.setGeometry(0,0,0,0)
+            self.detailLayout.addLayout(self.infoBar(self.currRoom))
+            self.detailLayout.addLayout(self.content(self.currRoom))
+            self.detailLayout.addLayout(self.chatBox(self.currRoom))
+            self.textContext.setText(temp)
+            self.searchField.setText(temp2)
+            self.searchField.setFocus()
 
     def removeLayout(self, layout):
         while layout.count()>0:
@@ -562,6 +761,14 @@ class lobbyWindow(QtW.QMainWindow):
                 childrenLayout.widget().deleteLater()
             else:
                 self.removeLayout(childrenLayout)
+
+    async def removeParti(self, uri):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"Update,+++-1,+++remove,+++,+++{User}")
+
+    def closeEvent(self, event):
+        asyncio.get_event_loop().run_until_complete(self.removeParti('ws://localhost:8765'))
+        event.accept()
 
 class newChat(QtW.QWidget):
     status_signal = QtC.pyqtSignal(str)
@@ -577,11 +784,44 @@ class newChat(QtW.QWidget):
         self.setLayout(self.majorL)
         self.box.returnPressed.connect(lambda: self.newChat())
 
+    async def sendUpdate(self, uri, id, name, user):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"NewRoom,+++{id},+++{name},+++{user}")
+            data = await websocket.recv()
+            return data
+
+    async def transformation(self, data):
+        global serverData, chatDataCollection, network
+
+        serverData = []
+        chatDataCollection = []
+
+        data =json.loads(data)
+
+        network = data["User"]
+
+        for x in data["chatRoom"]:
+            if User in x["pinnedBy"]:
+                pin = True
+            else:
+                pin = False
+            temp2 = []
+            for y in x["conv"]:
+                temp = convData(y[0],y[1],y[2])
+                temp2.append(temp)
+            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+            serverData.append(temp3)
+
+        chatDataCollection = serverData.copy()
+    
     def newChat(self):
         if self.box.text() != "":
             global chatDataCollection
+            temp = serverData[-1].id+1
             serverData.append(chatData(serverData[-1].id+1, self.box.text(), "N/A", "No message yet...", False, [], [User]))
             chatDataCollection = serverData.copy()
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', temp, self.box.text(), User))
+            self.transformation(data)
             self.status_signal.emit('Go')
             self.hide()
 
@@ -618,9 +858,44 @@ class chatInfo(QtW.QWidget):
         self.majorL.addLayout(self.majorH2)
         self.setLayout(self.majorL)
     
+    async def sendUpdate(self, uri, id, method, item, content):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
+            data = await websocket.recv()
+            return data
+
+    async def transformation(self, data):
+        global serverData, chatDataCollection, network
+
+        serverData = []
+        chatDataCollection = []
+
+        data =json.loads(data)
+
+        network = data["User"]
+
+        for x in data["chatRoom"]:
+            if User in x["pinnedBy"]:
+                pin = True
+            else:
+                pin = False
+            temp2 = []
+            for y in x["conv"]:
+                temp = convData(y[0],y[1],y[2])
+                temp2.append(temp)
+            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+            serverData.append(temp3)
+
+        chatDataCollection = serverData.copy()
+    
     def pin(self, checked):
         global chatDataCollection
         serverData[self.room].pin = self.pinC.isChecked()
+        if self.pinC.isChecked():
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "add", "pinnedBy", User))
+        else:
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "remove", "pinnedBy", User))
+        self.transformation(data)
         chatDataCollection = serverData.copy()
         self.status_signal.emit('Go')
 
@@ -657,18 +932,52 @@ class newParti(QtW.QWidget):
         tempF = QtW.QVBoxLayout()
         tempF.addWidget(scroll)
         self.setLayout(tempF)
-    
+
+    async def sendUpdate(self, uri, id, method, item, content):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
+            data = await websocket.recv()
+            return data
+
+    async def transformation(self, data):
+        global serverData, chatDataCollection, network
+
+        serverData = []
+        chatDataCollection = []
+
+        data =json.loads(data)
+
+        network = data["User"]
+
+        for x in data["chatRoom"]:
+            if User in x["pinnedBy"]:
+                pin = True
+            else:
+                pin = False
+            temp2 = []
+            for y in x["conv"]:
+                temp = convData(y[0],y[1],y[2])
+                temp2.append(temp)
+            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+            serverData.append(temp3)
+
+        chatDataCollection = serverData.copy()
+
     def add(self, x):
         serverData[self.room].parti.append(x)
+        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "add", "parti", x))
+        self.transformation(data)
         index = network.index(x)
         self.majorV2.itemAt(index).widget().setEnabled(False)
         
-
 
 
         
 
 
 app = QtW.QApplication([])
-lobby = lobbyWindow()
+initial = initialWindow()
 app.exec_()
+if User != "":
+    lobby = lobbyWindow()
+    app.exec_()
