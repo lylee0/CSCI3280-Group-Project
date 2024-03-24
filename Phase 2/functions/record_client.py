@@ -68,21 +68,24 @@ def write_file_header(f, channel, samp_width, fs):
 async def handle_server():
     global f, recording, audio_merged
     async with websockets.connect(URI) as websocket:
+        #await start_recording(websocket) # for testing
         async for message in websocket:
             if message == "Start Recording":
 
                 # write file header
                 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_file = f"./recordings/recording_{current_time}.wav"
-                global f
+                #global f
                 f = wave.open(output_file, 'wb')
                 write_file_header(f, channel, samp_width, fs)
                 audio_merged = []
 
                 # recieve merged audio data from server
-                receive_bytes(websocket)
+                task_receive = asyncio.create_task(receive_bytes(websocket))
                 # write merged audio data to local file
-                write_file(f)
+                task_write = asyncio.create_task(write_file(f))
+
+                await asyncio.gather(task_receive, task_write)
 
                 while True:
                     # recieve message
@@ -95,5 +98,4 @@ async def handle_server():
                 f.flush()
                 f.close()
 
-if __name__ == "_main_":
-    asyncio.run(handle_server())
+asyncio.run(handle_server())
