@@ -8,9 +8,6 @@ import pygetwindow as gw
 import threading
 import time
 import datetime
-import struct
-import sys
-import wave
 from pydub import AudioSegment
 
 
@@ -26,7 +23,7 @@ block_align = 2 #???
 
 
 '''
-    Recieve audio from client
+    Recieve audio from all clients
 '''
 async def receive_audio(websocket, client_id):
     global clients
@@ -36,7 +33,7 @@ async def receive_audio(websocket, client_id):
             audio_bytes[client_id].append(message)
 
 '''
-    Merge all users audio, and call the write file function
+    Merge all users audio, and call the write file function (in server)
 '''
 async def merge_audio():
     # audio_array is a 2d np array
@@ -50,7 +47,7 @@ async def merge_audio():
         audio_merged.append(maximum)
 
 '''
-    Convert byte to integer
+    Convert byte to integer (in server)
 '''
 async def byte_to_int():
     global audio_bytes, audio_array
@@ -60,7 +57,7 @@ async def byte_to_int():
             pass
 
 '''
-    Send merged audio data to clients
+    Send merged audio data to all clients
 '''
 async def send_audio(websocket):
     while audio_merged:
@@ -73,7 +70,7 @@ async def send_audio(websocket):
 async def handle_server(websocket): # client connects to server
     global clients, recording, audio_bytes, audio_array, audio_merged
 
-    client_id = id(websocket)
+    #client_id = id(websocket)
 
     async for message in websocket:
         if message == "Start Recording":
@@ -89,7 +86,7 @@ async def handle_server(websocket): # client connects to server
             await byte_to_int() # need await???
             # merge users audio
             await merge_audio()
-            # send recording to clients
+            # send recording to all clients
             await send_audio(websocket)
             # write audio
             #await write_file()
@@ -105,3 +102,6 @@ async def handle_server(websocket): # client connects to server
 
             # send message when all required data is sent to clients???
             await websocket.send('Stop Recording')
+
+if __name__ == "_main_":
+    asyncio.run(handle_server(websocket))
