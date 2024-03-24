@@ -89,23 +89,24 @@ async def handle_server(websocket): # client connects to server
             # send to all clients
             await websocket.send('Start Recording')
 
-            client = clients[0]
+            print(clients)
+            #client = clients[0]
             # change this ???
-            task = asyncio.create_task(receive_audio(websocket, client.index())) # recieve audio from clients
+            task_receive = asyncio.create_task(receive_audio(websocket, id(clients))) # recieve audio from clients
             # convert audio to int
-            byte_to_int() # need await???
+            task_byte_to_int = asyncio.create_task(byte_to_int()) # need await???
             # merge users audio
-            merge_audio()
+            task_merge = asyncio.create_task(merge_audio())
             # send recording to all clients
-            send_audio(websocket)
-            # write audio
-            #await write_file()
-            
+            task_send = asyncio.create_task(send_audio(websocket))
+
+            await asyncio.gather(task_receive, task_byte_to_int, task_merge, task_send)
+
             while True:
                 # recieve message
                 message = await websocket.recv()
                 if message == 'Stop Recording':
-                    task.cancel()
+                    task_receive.cancel()
                     break
 
             recording = False
@@ -117,5 +118,4 @@ async def main():
     async with websockets.serve(handle_server, "localhost", PORT):
         await asyncio.Future()
 
-if __name__ == "_main_":
-    asyncio.run(main())
+asyncio.run(main())
