@@ -187,7 +187,10 @@ class lobbyWindow(QtW.QMainWindow):
                 name.setFont(nameFont)
                 tempBox.addWidget(name)
                 lCT = QtW.QLabel()
-                lCT.setText(chatDataCollection[x].lCT)
+                if User in chatDataCollection[x].parti:
+                    lCT.setText(chatDataCollection[x].lCT)
+                else:
+                    lCT.setText("N/A")
                 lCT.setFixedHeight(12)
                 lCT.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
                 lCT.setStyleSheet("color: grey")
@@ -196,7 +199,10 @@ class lobbyWindow(QtW.QMainWindow):
                 tempBox.addWidget(lCT)
                 tempBox2.addLayout(tempBox)
                 lM = QtW.QLabel()
-                lM.setText(chatDataCollection[x].lM)
+                if User in chatDataCollection[x].parti:
+                    lM.setText(chatDataCollection[x].lM)
+                else:
+                    lM.setText("You are not in this chat room")
                 lM.setFixedHeight(12)
                 lMFont = QtG.QFont()
                 lMFont.setItalic(True)
@@ -240,7 +246,10 @@ class lobbyWindow(QtW.QMainWindow):
                 name.setFont(nameFont)
                 tempBox.addWidget(name)
                 lCT = QtW.QLabel()
-                lCT.setText(chatDataCollection[x].lCT)
+                if User in chatDataCollection[x].parti:
+                    lCT.setText(chatDataCollection[x].lCT)
+                else:
+                    lCT.setText("N/A")
                 lCT.setFixedHeight(12)
                 lCT.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
                 lCT.setStyleSheet("color: grey")
@@ -249,7 +258,10 @@ class lobbyWindow(QtW.QMainWindow):
                 tempBox.addWidget(lCT)
                 tempBox2.addLayout(tempBox)
                 lM = QtW.QLabel()
-                lM.setText(chatDataCollection[x].lM)
+                if User in chatDataCollection[x].parti:
+                    lM.setText(chatDataCollection[x].lM)
+                else:
+                    lM.setText("You are not in this chat room")
                 lM.setFixedHeight(12)
                 lMFont = QtG.QFont()
                 lMFont.setItalic(True)
