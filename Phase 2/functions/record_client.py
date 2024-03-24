@@ -80,9 +80,9 @@ async def handle_server():
                 audio_merged = []
 
                 # recieve merged audio data from server
-                await receive_bytes(websocket)
+                receive_bytes(websocket)
                 # write merged audio data to local file
-                await write_file(f)
+                write_file(f)
 
                 while True:
                     # recieve message
