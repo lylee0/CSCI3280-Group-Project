@@ -1,15 +1,11 @@
-import pyaudio
 import asyncio
 import websockets
 import numpy as np
 import cv2
 import pyautogui
 import pygetwindow as gw
-import threading
-import time
 import datetime
 import wave
-from pydub import AudioSegment
 
 audio_merged = []
 recording = False
@@ -17,6 +13,9 @@ channel = 1
 samp_width = 2
 fs = 44100
 block_align = 2 #???
+PORT = "8765"
+HOST = "localhost"
+URI = "ws://" + HOST + ":" + PORT
 
 '''
     Start Recording (one client)
@@ -66,9 +65,9 @@ def write_file_header(f, channel, samp_width, fs):
 '''
     Handle messages from server (all clients)
 '''
-async def handle_server(path):
+async def handle_server():
     global f, recording, audio_merged
-    async with websockets.connect(path) as websocket:
+    async with websockets.connect(URI) as websocket:
         async for message in websocket:
             if message == "Start Recording":
 
@@ -92,9 +91,9 @@ async def handle_server(path):
                         #task.cancel()
                         break
                 recording = False
+                # need to wait till all data is sent to clients
                 f.flush()
                 f.close()
 
 if __name__ == "_main_":
-    path = ""
-    asyncio.run(handle_server(path))
+    asyncio.run(handle_server())
