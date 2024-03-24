@@ -8,8 +8,6 @@ import pygetwindow as gw
 import threading
 import time
 import datetime
-import struct
-import sys
 import wave
 from pydub import AudioSegment
 
@@ -21,30 +19,24 @@ fs = 44100
 block_align = 2 #???
 
 '''
-    Start Recording
+    Start Recording (one client)
 '''
 # call this function when click record
 async def start_recording(websocket):
-    global recording
-    # write file header
-    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"./recordings/recording_{current_time}.wav"
-    global f
-    f = open(output_file, 'wb')
-
-    #async with websockets.connect(path) as websocket:
-    write_file_header(f, channel, samp_width, fs)
-    recording = True
+    #global recording
+    #recording = True
     # send start message to server
     await websocket.send("Start Recording")
-    await handle_server(websocket)
 
 '''
-    Stop Recording
+    Stop Recording (one client)
 '''
 async def stop_message(websocket):
     await websocket.send("Stop Recording")
 
+'''
+    Receive audio bytes from server (all clients)
+'''
 async def receive_bytes(websocket):
     global audio_merged
     async for message in websocket:
@@ -52,7 +44,7 @@ async def receive_bytes(websocket):
             audio_merged.append(message)
 
 '''
-    Write samples to wav file
+    Write samples to wav file (all clients)
 '''
 async def write_file(output_file):
     global audio_merged
@@ -63,33 +55,46 @@ async def write_file(output_file):
             audio_merged.pop(0)
 
 '''
-    Write the wav file header
+    Write the wav file header (all clients)
 '''
 def write_file_header(f, channel, samp_width, fs):
     f.setnchannels(channel)
     f.setsampwidth(samp_width) # 4 bytes
     f.setframerate(fs)
-    return f
-
+    #return f
 
 '''
-    Handle messages from server
+    Handle messages from server (all clients)
 '''
-async def handle_server(websocket):
+async def handle_server(path):
     global f, recording, audio_merged
-    async for message in websocket:
-        if message == "Start Recording":
-            
-            audio_merged = []
-            # recieve merged audio data from server
-            await receive_bytes(websocket)
-            # write merged audio data to local file
-            await write_file(f)
+    async with websockets.connect(path) as websocket:
+        async for message in websocket:
+            if message == "Start Recording":
 
-            while True:
-                # recieve message
-                message = await websocket.recv()
-                if message == 'Stop Recording':
-                    #task.cancel()
-                    break
-            recording = False
+                # write file header
+                current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_file = f"./recordings/recording_{current_time}.wav"
+                global f
+                f = wave.open(output_file, 'wb')
+                write_file_header(f, channel, samp_width, fs)
+                audio_merged = []
+
+                # recieve merged audio data from server
+                await receive_bytes(websocket)
+                # write merged audio data to local file
+                await write_file(f)
+
+                while True:
+                    # recieve message
+                    message = await websocket.recv()
+                    if message == 'Stop Recording':
+                        #task.cancel()
+                        break
+                recording = False
+                f.flush()
+                f.close()
+
+if __name__ == "_main_":
+    path = ""
+    asyncio.run(handle_server(path))
