@@ -93,11 +93,11 @@ async def handle_server(websocket): # client connects to server
             # change this ???
             task = asyncio.create_task(receive_audio(websocket, client.index())) # recieve audio from clients
             # convert audio to int
-            await byte_to_int() # need await???
+            byte_to_int() # need await???
             # merge users audio
-            await merge_audio()
+            merge_audio()
             # send recording to all clients
-            await send_audio(websocket)
+            send_audio(websocket)
             # write audio
             #await write_file()
             
