@@ -16,12 +16,12 @@ CHUNK = 1024
 audio = pyaudio.PyAudio()
 stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
-# def unmute():
-#     global audio
-#     global stream
+def unmute():
+    global audio
+    global stream
 
-#     audio = pyaudio.PyAudio()
-#     stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    audio = pyaudio.PyAudio()
+    stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
 def mute():
     global audio
@@ -43,7 +43,21 @@ async def play_audio():
         while True:
             data = await websocket.recv()
             while data:
+                print(data)
                 stream.write(data)
 
+async def main():
+    task_send_audio = asyncio.create_task(send_audio())
+    task_play_audio = asyncio.create_task(play_audio())
+
+    # Wait for either task to complete
+    await asyncio.gather(task_send_audio, task_play_audio)
+
+    # close audio stream when user leave chat room
+    mute()
+
 if __name__ == "__main__":
-    asyncio.run(send_audio())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

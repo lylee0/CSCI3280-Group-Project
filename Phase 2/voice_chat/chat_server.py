@@ -20,8 +20,8 @@ async def handle_connection(websocket, path):
 
 async def broadcast(audio, sender):
     for peer in CONNECTIONS:
-        if peer != sender:
-            await peer.send(audio)
+        #if peer != sender:
+        await peer.send(audio)
 
 async def main():
     async with websockets.serve(handle_connection, 'localhost', PORT):
