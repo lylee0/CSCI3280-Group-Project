@@ -9,8 +9,6 @@ import json
 import time
 import nest_asyncio
 
-
-
 class chatData:
     def __init__(self, id, name, lastChatTime, lastMessage, pinned, conv, parti):
         self.id = id
@@ -378,6 +376,7 @@ class lobbyWindow(QtW.QMainWindow):
             tempL.setFont(tempLFont)
             tempL.setContentsMargins(10,0,10,0)
             tempL.setStyleSheet("background-color:#d2ffb0")
+
             tempB1 = QtW.QLabel()
             tempB1.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\add-user.png").scaled(QtC.QSize(25, 25)))
             tempB1.setFixedSize(40,50)
@@ -385,12 +384,15 @@ class lobbyWindow(QtW.QMainWindow):
             tempB1.setContentsMargins(7,12,7,12)
             tempB1.setStyleSheet("background-color:#d2ffb0")
             tempB1.mousePressEvent = self.addParti
+
             tempB2 = QtW.QLabel()
             tempB2.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\call.png").scaled(QtC.QSize(25, 25)))
             tempB2.setFixedSize(40,50)
             tempB2.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             tempB2.setContentsMargins(7,12,7,12)
             tempB2.setStyleSheet("background-color:#d2ffb0")
+
+            
             tempB3 = QtW.QLabel()
             tempB3.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\info.png").scaled(QtC.QSize(25, 25)))
             tempB3.setFixedSize(40,50)

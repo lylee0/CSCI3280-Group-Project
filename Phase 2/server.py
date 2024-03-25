@@ -15,6 +15,7 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w')
 async def echo(websocket, path):
     async for message in websocket:
         message = message.split(",+++")
+
         if message[0] == "Get":
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
                 json_object = json.load(openfile) 
@@ -24,6 +25,7 @@ async def echo(websocket, path):
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
                 updatefile.write(json.dumps(json_object))
             await websocket.send(json.dumps(json_object))
+
         if message[0] == "Update":
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
                 json_object = json.load(openfile)       
@@ -58,6 +60,7 @@ async def echo(websocket, path):
             except Exception as e:
                 print(e)
                 await websocket.send("error")
+
         if message[0] == "NewRoom":
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
                 json_object = json.load(openfile)
@@ -78,6 +81,7 @@ async def echo(websocket, path):
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
                 updatefile.write(json.dumps(json_object))
             await websocket.send(json.dumps(json_object))
+            
         if message[0] == "Read":
             with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
                 json_object = json.load(openfile)
