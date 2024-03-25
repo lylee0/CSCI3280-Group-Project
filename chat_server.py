@@ -2,11 +2,20 @@ import asyncio
 import socket
 import websockets
 import threading
+import pyaudio
 
 PORT = 8765
 IP = socket.gethostbyname('localhost')
 ADDR = (IP, PORT)
 CONNECTIONS = set()
+
+FORMAT = pyaudio.paInt16
+CHANNEL = 1
+RATE = 44100
+CHUNK = 1024
+
+audio_play = pyaudio.PyAudio()
+stream_play = audio_play.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK)
 
 async def handle_connection(websocket, path):
     CONNECTIONS.add(websocket)
@@ -14,15 +23,19 @@ async def handle_connection(websocket, path):
     try:
         async for audio in websocket:
             print(audio)
+            #await play(audio)
             await broadcast(audio, websocket)
     finally:
         CONNECTIONS.remove(websocket)
+
+async def play(data):
+    global stream_play
+    stream_play.write(data)
 
 async def broadcast(audio, sender):
     for peer in CONNECTIONS:
         #if peer != sender:
         await peer.send(audio)
-        print(1)
 
 async def main():
     async with websockets.serve(handle_connection, 'localhost', PORT):
