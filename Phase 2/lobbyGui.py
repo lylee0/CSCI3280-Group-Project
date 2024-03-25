@@ -9,6 +9,8 @@ import json
 import time
 import nest_asyncio
 
+host = '112.118.236.172'
+
 class chatData:
     def __init__(self, id, name, lastChatTime, lastMessage, pinned, conv, parti):
         self.id = id
@@ -45,7 +47,7 @@ async def getInitialProfile(uri):
             data = await websocket.recv()
             return data
         
-data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://localhost:8765'))
+data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://'+host+':8765'))
 
 data =json.loads(data)
 
@@ -90,7 +92,7 @@ class initialWindow(QtW.QWidget):
             global User
             User = text
             network.append(User)
-            asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://localhost:8765'))
+            asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://'+host+':8765'))
             self.close()
 
 class lobbyWindow(QtW.QMainWindow):
@@ -582,7 +584,7 @@ class lobbyWindow(QtW.QMainWindow):
         chatDataCollection = serverData.copy()
     
     def joinRoom(self):
-        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "add", "parti", User))
+        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', self.currRoom, "add", "parti", User))
         self.transformation(data)
         self.removeLayout(self.listLayout)
         self.pinContent = []
@@ -609,9 +611,9 @@ class lobbyWindow(QtW.QMainWindow):
             [x for x in chatDataCollection if x.id == self.currRoom][0].conv.append(convData(User, self.textContext.text(), datetime.now().strftime("%H:%M %Y/%m/%d")))
             [x for x in chatDataCollection if x.id == self.currRoom][0].lCT = datetime.now().strftime("%H:%M %Y/%m/%d")
             [x for x in chatDataCollection if x.id == self.currRoom][0].lM = User + ": " + self.textContext.text()
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "add", "conv", f"{User}&+&{self.textContext.text()}&+&" + str(datetime.now().strftime("%H:%M %Y/%m/%d"))))
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "change", "lCT", datetime.now().strftime("%H:%M %Y/%m/%d")))
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', self.currRoom, "change", "lM", User + ": " + self.textContext.text()))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', self.currRoom, "add", "conv", f"{User}&+&{self.textContext.text()}&+&" + str(datetime.now().strftime("%H:%M %Y/%m/%d"))))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', self.currRoom, "change", "lCT", datetime.now().strftime("%H:%M %Y/%m/%d")))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', self.currRoom, "change", "lM", User + ": " + self.textContext.text()))
             self.transformation(data)
             self.removeLayout(self.listLayout)
             self.pinContent = []
@@ -725,7 +727,7 @@ class lobbyWindow(QtW.QMainWindow):
             self.fflag = True
 
     def getRefresh(self):
-        data = asyncio.get_event_loop().run_until_complete(self.sendRead('ws://localhost:8765'))
+        data = asyncio.get_event_loop().run_until_complete(self.sendRead('ws://'+host+':8765'))
         data = json.loads(data)
         global network, chatDataCollection, serverData
         temp10 = serverData.copy()
@@ -781,7 +783,7 @@ class lobbyWindow(QtW.QMainWindow):
             await websocket.send(f"Update,+++-1,+++remove,+++,+++{User}")
 
     def closeEvent(self, event):
-        asyncio.get_event_loop().run_until_complete(self.removeParti('ws://localhost:8765'))
+        asyncio.get_event_loop().run_until_complete(self.removeParti('ws://'+host+':8765'))
         event.accept()
 
 class newChat(QtW.QWidget):
@@ -834,7 +836,7 @@ class newChat(QtW.QWidget):
             temp = serverData[-1].id+1
             serverData.append(chatData(serverData[-1].id+1, self.box.text(), "N/A", "No message yet...", False, [], [User]))
             chatDataCollection = serverData.copy()
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', temp, self.box.text(), User))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', temp, self.box.text(), User))
             self.transformation(data)
             self.status_signal.emit('Go')
             self.hide()
@@ -906,9 +908,9 @@ class chatInfo(QtW.QWidget):
         global chatDataCollection
         serverData[self.room].pin = self.pinC.isChecked()
         if self.pinC.isChecked():
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "add", "pinnedBy", User))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', serverData[self.room].id, "add", "pinnedBy", User))
         else:
-            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "remove", "pinnedBy", User))
+            data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', serverData[self.room].id, "remove", "pinnedBy", User))
         self.transformation(data)
         chatDataCollection = serverData.copy()
         self.status_signal.emit('Go')
@@ -979,7 +981,7 @@ class newParti(QtW.QWidget):
 
     def add(self, x):
         serverData[self.room].parti.append(x)
-        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://localhost:8765', serverData[self.room].id, "add", "parti", x))
+        data = asyncio.get_event_loop().run_until_complete(self.sendUpdate('ws://'+host+':8765', serverData[self.room].id, "add", "parti", x))
         self.transformation(data)
         index = network.index(x)
         self.majorV2.itemAt(index).widget().setEnabled(False)

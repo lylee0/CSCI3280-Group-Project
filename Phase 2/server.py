@@ -89,5 +89,5 @@ async def echo(websocket, path):
                 updatefile.write(json.dumps(json_object))
             await websocket.send(json.dumps(json_object))
 
-asyncio.get_event_loop().run_until_complete(websockets.serve(echo, 'localhost', 8765))
+asyncio.get_event_loop().run_until_complete(websockets.serve(echo, '112.118.236.172', 8765))
 asyncio.get_event_loop().run_forever()
