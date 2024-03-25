@@ -215,8 +215,8 @@ class MultiUserChatWindow(QWidget):
     def EndChatButtonFunction(self, event):
         return
     
-
-app = QApplication(sys.argv)
-w = TestApp()
-w.show()
-app.exec_()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    w = TestApp()
+    w.show()
+    app.exec_()

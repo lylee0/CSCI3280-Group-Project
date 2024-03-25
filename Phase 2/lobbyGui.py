@@ -8,6 +8,7 @@ import websockets
 import json
 import time
 import nest_asyncio
+import multiUserChatGui
 
 host = '112.118.236.172'
 
@@ -104,6 +105,7 @@ class lobbyWindow(QtW.QMainWindow):
         self.currRoom = 0
         self.newChatWindow = newChat()
         self.newChatWindow.status_signal.connect(self.newChatAction)
+        self.callWindow = multiUserChatGui.MultiUserChatWindow()
         self.chatRoomList()
         self.chatRoomDetail()
         self.timer = QtC.QTimer()
@@ -393,6 +395,7 @@ class lobbyWindow(QtW.QMainWindow):
             tempB2.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             tempB2.setContentsMargins(7,12,7,12)
             tempB2.setStyleSheet("background-color:#d2ffb0")
+            tempB2.mousePressEvent = self.call
 
             
             tempB3 = QtW.QLabel()
@@ -642,6 +645,9 @@ class lobbyWindow(QtW.QMainWindow):
         self.infoWindow.status_signal.connect(self.newPinAction)
         self.infoWindow.show()
     
+    def call(self, event):
+        self.callWindow.show()
+
     def addParti(self, event):
         temp = [x.id for x in serverData]
         pos = temp.index(self.currRoom)
