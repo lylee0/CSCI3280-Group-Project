@@ -42,7 +42,6 @@ def broadcast(sender):
     while True:
         if audio_receive:
             data = audio_receive.pop(0)
-            #audio_receive = audio_receive[CHUNK:]
             for client_socket in CONNECTIONS:
                 if client_socket != sender:
                     client_socket.sendall(data)
