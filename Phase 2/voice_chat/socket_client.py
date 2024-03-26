@@ -18,50 +18,46 @@ CHUNK = 1024
 recording = False
 
 audio = pyaudio.PyAudio()
-stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_play = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK)
+stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK)
 
-audio_dict = {}
+audio_receive = {}
 audio_record = {}
-#audio_receive = b''
 
 def unmute():
-    global audio
-    global stream
+    global audio, stream_input
 
     audio = pyaudio.PyAudio()
-    stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
+    stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
 
 def mute():
-    global audio
-    global stream
+    global audio, stream_input
 
-    stream.stop_stream()
-    stream.close()
+    stream_input.stop_stream()
+    stream_input.close()
     audio.terminate()
-
 
 '''
     Record client audio from device (only one client)
 '''
 def record_pc(client_socket):
-    global audio_dict, audio_record
-    while stream.is_active():
-        data = stream.read(CHUNK)
+    global audio_receive, audio_record
+    while stream_input.is_active():
+        data = stream_input.read(CHUNK)
         if recording == False:
-            audio_dict[client_socket].append(data)
+            audio_receive[client_socket].append(data)
         else:
-            audio_dict[client_socket].append(data)
-            audio_record[client_socket].append(data)
+            audio_receive[client_socket].append(data)
+            audio_record[client_socket] += data
 
 '''
     Send client audio to server (only one client)
 '''
 def send_audio(client_socket):
-    global audio_dict
+    global audio_receive
     while True:
-        if audio_dict[client_socket]:
-            data = audio_dict[client_socket].pop(0)
+        if audio_receive[client_socket]:
+            data = audio_receive[client_socket].pop(0)
             client_socket.sendall(data)
         else:
             continue
@@ -70,7 +66,7 @@ def send_audio(client_socket):
     Need to receive multiple users audio at the same time (more than one client)
 '''
 def receive_audio(client_socket):
-    global audio_dict, audio_record
+    global audio_receive, audio_record
     while True:
         data = client_socket.recv(CHUNK)
         #print(data)
@@ -78,20 +74,20 @@ def receive_audio(client_socket):
             continue
         else:
             if recording == False:
-                audio_dict[client_socket].append(data)
+                audio_receive[client_socket].append(data)
             else:
-                audio_dict[client_socket].append(data)
-                audio_record[client_socket].append(data)
+                audio_receive[client_socket].append(data)
+                audio_record[client_socket] += data
 
 '''
     Need to play multiple users audio at the same time (more than one client)
 '''
 def play_audio(client_socket):
-    global audio_dict
+    global audio_receive, stream_output
     while True:
-        if audio_dict[client_socket]:
-            data = audio_dict[client_socket].pop(0)
-            stream_play.write(data)
+        if audio_receive[client_socket]:
+            data = audio_receive[client_socket].pop(0)
+            stream_output.write(data)
         else:
             continue
 
@@ -114,13 +110,13 @@ def handle_client(client_socket):
     client_socket.close()
 
 def main():
-    global audio_dict
+    global audio_receive, audio_record
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, int(PORT)))
 
-    audio_dict[client_socket] = []
-    audio_record[client_socket] = []
+    audio_receive[client_socket] = []
+    audio_record[client_socket] = b''
 
     record_thread = threading.Thread(target=record_pc, args=(client_socket,))
     #play_thread = threading.Thread(target=play_audio)
