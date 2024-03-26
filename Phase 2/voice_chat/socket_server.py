@@ -31,6 +31,8 @@ def receive_audio(client_socket):
     global audio_receive
     while True:
         data = client_socket.recv(CHUNK)
+        # if receive message "Start Recording", send "Start Recording to all clients"
+        # if receive message "Stop Recording", send "Stop Recording to all clients"
         audio_receive += data
         #print(data)
 
