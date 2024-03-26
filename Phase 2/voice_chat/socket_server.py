@@ -11,12 +11,12 @@ FORMAT = pyaudio.paInt16
 CHANNEL = 1
 RATE = 8000
 CHUNK = 1024
-audio_receive = b'' # only store 1 client?
+audio_receive = [] # only store 1 client?
 
 def handle_connection(client_socket, address):
     global audio_receive
     CONNECTIONS.add(client_socket)
-    audio_receive = b''
+    audio_receive = []
     print(f'connected client: {address}')
     receive_thread = threading.Thread(target=receive_audio, args=(client_socket,))
     broadcast_thread = threading.Thread(target=broadcast, args=(client_socket,))
@@ -24,6 +24,9 @@ def handle_connection(client_socket, address):
     broadcast_thread.start()
     #receive_audio(client_socket)
 
+'''
+    Receive audio from client (only one client)
+'''
 def receive_audio(client_socket):
     global audio_receive
     while True:
@@ -31,12 +34,15 @@ def receive_audio(client_socket):
         audio_receive += data
         #print(data)
 
+'''
+    Send the received audio to all clients except the sender (handle data only from one client)
+'''
 def broadcast(sender):
     global audio_receive
     while True:
         if audio_receive:
-            data = audio_receive[:CHUNK]
-            audio_receive = audio_receive[CHUNK:]
+            data = audio_receive.pop(0)
+            #audio_receive = audio_receive[CHUNK:]
             for client_socket in CONNECTIONS:
                 if client_socket != sender:
                     client_socket.sendall(data)
