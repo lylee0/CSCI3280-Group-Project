@@ -166,7 +166,6 @@ def merge_write():
             audio_bytes = audio_record[client].pop(0)
             try:
                 if audio_bytes.decode('utf-8') == "Stop Recording":
-                    f.flush()
                     f.close()
                     break
             except:
