@@ -174,7 +174,7 @@ def merge_write():
             audio = AudioSegment(audio_bytes,sample_width=2,channels=CHANNEL,frame_rate=RATE)
             audio_merge = audio.overlay(audio_merge)
 
-        print(audio_merge.raw_data)
+        #print(audio_merge.raw_data)
         f.writeframesraw(audio_merge.raw_data)
 
 def send_start(client_socket):
