@@ -29,7 +29,6 @@ audio_receive = {}
 audio_record = {}
 
 file_start_time = 0
-
 def unmute():
     global audio, stream_input
 
@@ -47,7 +46,7 @@ def mute():
     Record client audio from device (only one client)
 '''
 def record_pc(client_socket):
-    global chatroom, audio_receive, audio_record, sample_width, recording
+    global chatroom, recording, audio_receive, audio_record, sample_width
     while chatroom:
         if stream_input.is_active():
             data = stream_input.read(CHUNK)
@@ -68,7 +67,7 @@ def record_pc(client_socket):
     Send client audio to server (only one client)
 '''
 def send_audio(client_socket):
-    global audio_receive, chatroom
+    global chatroom, audio_receive
     while chatroom:
         if audio_receive[client_socket]:
             data = audio_receive[client_socket].pop(0)
@@ -80,18 +79,16 @@ def send_audio(client_socket):
     Need to receive multiple users audio at the same time (more than one client)
 '''
 def receive_audio(client_socket):
-    global audio_receive, audio_record, file_start_time, chatroom, recording
+    global audio_receive, audio_record, file_start_time, recording, chatroom
     while chatroom:
         data = client_socket.recv(CHUNK)
         check = 1
         if not data:
             continue
-
         try:
             check = data.decode('utf-8')
         except:
             pass
-
         if check == "Start Recording":
             recording = True
             file_start_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -129,7 +126,7 @@ def handle_client(client_socket):
         print(f"Connected clients: {len(clients)}")
 
     receive_audio(client_socket)
-    play_audio(client_socket) # not sure
+    #play_audio(client_socket) # not sure
 
     with clients_lock:
         clients.remove(client_socket)
@@ -156,7 +153,9 @@ def merge_write():
     if (not os.path.exists(output_file)) and (file_start_time != 0):
         f = wave.open(output_file, 'wb')
         write_file_header()
+        #f.close()
     while True:
+        #f = wave.open(output_file, 'wb')
         audio_zero = bytes([0] * sample_width * CHUNK)
         audio_merge = AudioSegment(audio_zero,sample_width=2,channels=CHANNEL,frame_rate=RATE)
         all_clients = audio_record.keys()
@@ -193,17 +192,17 @@ def main():
     #audio_write = b''
 
     record_thread = threading.Thread(target=record_pc, args=(client_socket,))
-    #play_thread = threading.Thread(target=play_audio)
+    play_thread = threading.Thread(target=play_audio, args=(client_socket,))
     task_send_audio = threading.Thread(target=send_audio, args=(client_socket,))
     # need to handle data from different client, better set a dictionary with client as the key, and values to be the buffer
     client_thread = threading.Thread(target=handle_client, args=(client_socket,))
-    #merge_thread = threading.Thread(target=merge_write)
+    merge_thread = threading.Thread(target=merge_write)
 
     record_thread.start()
-    #play_thread.start()
+    play_thread.start()
     task_send_audio.start()
     client_thread.start()
-    #merge_thread.start()
+    merge_thread.start()
 
     try:
         record_thread.join()
