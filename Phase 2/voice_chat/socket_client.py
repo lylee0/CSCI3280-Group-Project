@@ -47,7 +47,7 @@ def mute():
     Record client audio from device (only one client)
 '''
 def record_pc(client_socket):
-    global chatroom, audio_receive, audio_record, sample_width
+    global chatroom, audio_receive, audio_record, sample_width, recording
     while chatroom:
         if stream_input.is_active():
             data = stream_input.read(CHUNK)
@@ -68,7 +68,7 @@ def record_pc(client_socket):
     Send client audio to server (only one client)
 '''
 def send_audio(client_socket):
-    global audio_receive
+    global audio_receive, chatroom
     while chatroom:
         if audio_receive[client_socket]:
             data = audio_receive[client_socket].pop(0)
@@ -80,7 +80,7 @@ def send_audio(client_socket):
     Need to receive multiple users audio at the same time (more than one client)
 '''
 def receive_audio(client_socket):
-    global audio_receive, audio_record, file_start_time
+    global audio_receive, audio_record, file_start_time, chatroom, recording
     while chatroom:
         data = client_socket.recv(CHUNK)
         check = 1
@@ -111,7 +111,7 @@ def receive_audio(client_socket):
     Need to play multiple users audio at the same time (more than one client)
 '''
 def play_audio(client_socket):
-    global audio_receive, stream_output
+    global audio_receive, stream_output, chatroom
     while chatroom:
         if audio_receive[client_socket]:
             data = audio_receive[client_socket].pop(0)
