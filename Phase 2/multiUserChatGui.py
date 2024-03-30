@@ -30,9 +30,6 @@ RATE = 44100
 CHUNK = 1024
 sample_width = 2
 
-recording = False
-chatroom = True
-
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
 stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
@@ -235,7 +232,7 @@ class MultiUserChatWindow(QWidget):
         self.record = not self.record
     
     def EndChatButtonFunction(self, event):
-        self.closeEvent(event)
+        self.close()
     
 
     def updateMember(self):
@@ -293,19 +290,21 @@ class MultiUserChatWindow(QWidget):
 
 
     def closeEvent(self, event):
+        global recording, userInRoom
         asyncio.get_event_loop().run_until_complete(self.removeParti())
+        userInRoom.remove(self.user)
         self.timer.stop()
         self.online = False
         if recording:
             for x in recording.keys():
                 time = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{time}_{x}"
-                with wave.open(output, 'wb') as wave:
-                    wave.setchannels(CHANNEL)
-                    wave.setsamplewidth(sample_width)
-                    wave.setframerate(RATE)
-                    wave.writeframes(recording[x])
-        self.close()
+                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{time}_{x}.wav"
+                with wave.open(output, 'wb') as wavef:
+                    wavef.setnchannels(CHANNEL)
+                    wavef.setsampwidth(sample_width)
+                    wavef.setframerate(RATE)
+                    wavef.writeframes(recording[x])
+        recording = {}
 
     def listen(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
@@ -321,7 +320,7 @@ class MultiUserChatWindow(QWidget):
                 room = data[2:4]
                 room = struct.unpack('>h', room)[0]
                 mute = data[4:6]
-                mute = struct.unpack('>h', room)[0]
+                mute = struct.unpack('>h', mute)[0]
                 if user != userid and roomid == room and mute == 0:
                     data = data[6:]
                     stream_output.write(data)

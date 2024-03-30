@@ -21,11 +21,6 @@ async def echo(websocket, path):
     global CONNECTIONS
     CONNECTIONS.append(websocket) 
     async for message in websocket:
-        try:
-            print(message[:10])
-        except:
-            print("too short to be printed")
-        print(type(message))
         if type(message) == bytes:
             if websocket in CONNECTIONS: 
                 CONNECTIONS.remove(websocket)
