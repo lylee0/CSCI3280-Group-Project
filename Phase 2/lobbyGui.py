@@ -645,7 +645,8 @@ class lobbyWindow(QtW.QMainWindow):
         self.infoWindow.show()
     
     def call(self, event):
-        self.callWindow = multiUserChatGui.MultiUserChatWindow(self.currRoom, User)
+        userid = [x for x in serverData if x.id == self.currRoom][0].parti.index(User)
+        self.callWindow = multiUserChatGui.MultiUserChatWindow(userid, self.currRoom, User)
         self.callWindow.show()
 
     def addParti(self, event):

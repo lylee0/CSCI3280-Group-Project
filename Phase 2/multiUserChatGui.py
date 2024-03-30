@@ -16,6 +16,7 @@ import asyncio
 import json
 import pyaudio
 import struct
+import wave
 
 host = socket.gethostbyname(socket.gethostname())
 
@@ -38,8 +39,10 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 
 file_start_time = 0
 
+recording = {}
+
 class MultiUserChatWindow(QWidget):
-    def __init__(self, roomID, user):
+    def __init__(self, userid, roomID, user):
         super().__init__()
 
         self.online=True
@@ -50,6 +53,8 @@ class MultiUserChatWindow(QWidget):
         self.setMinimumSize(1024,500)
         self.room = roomID
         self.user = user
+        self.userid = userid
+        self.record = False
         self.firstInd = True
         self.updateMember()
         self.timer = QtC.QTimer()
@@ -227,7 +232,7 @@ class MultiUserChatWindow(QWidget):
         return
     
     def RecordingButtonFunction(self, event):
-        return
+        self.record = not self.record
     
     def EndChatButtonFunction(self, event):
         self.closeEvent(event)
@@ -254,20 +259,22 @@ class MultiUserChatWindow(QWidget):
         try:
             data = json.loads(data)
             global userInRoom
+            temp = userInRoom
             userInRoom = data["VoiceRoom"][str(self.room)]
-            if self.firstInd:
-                userid = len(userInRoom)
-                self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
-                self.send_thread = threading.Thread(target=self.send, args=(userid, self.room))
-                self.listen_thread.start()
-                self.send_thread.start()
-                self.firstInd = False
-            self.removeLayout(self.mainLayout)
-            self.mainLayout.setSpacing(10)
-            self.memberUI = self.MemberGroupUI()
-            self.mainLayout.addWidget(self.memberUI)
-            functionBar = self.FunctionBarUI()
-            self.mainLayout.addLayout(functionBar, QtC.Qt.AlignmentFlag.AlignBottom)
+            if temp != userInRoom:
+                if self.firstInd:
+                    userid = self.userid
+                    self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
+                    self.send_thread = threading.Thread(target=self.send, args=(userid, self.room))
+                    self.listen_thread.start()
+                    self.send_thread.start()
+                    self.firstInd = False
+                self.removeLayout(self.mainLayout)
+                self.mainLayout.setSpacing(10)
+                self.memberUI = self.MemberGroupUI()
+                self.mainLayout.addWidget(self.memberUI)
+                functionBar = self.FunctionBarUI()
+                self.mainLayout.addLayout(functionBar, QtC.Qt.AlignmentFlag.AlignBottom)
         except:
             print("empty json")
 
@@ -289,6 +296,14 @@ class MultiUserChatWindow(QWidget):
         asyncio.get_event_loop().run_until_complete(self.removeParti())
         self.timer.stop()
         self.online = False
+        if recording:
+            for x in recording.keys():
+                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}_x"
+                with wave.open(output, 'wb') as wave:
+                    wave.setchannels(CHANNEL)
+                    wave.setsamplewidth(sample_width)
+                    wave.setframerate(RATE)
+                    wave.writeframes(recording[x])
         self.close()
 
     def listen(self, userid, roomid):
@@ -296,6 +311,7 @@ class MultiUserChatWindow(QWidget):
         asyncio.set_event_loop(loop)
 
     async def receiveAudio(self, userid, roomid):
+        global recording
         async with websockets.connect(uri) as websocket:
             while self.online:
                 data = await websocket.recv()
@@ -303,9 +319,19 @@ class MultiUserChatWindow(QWidget):
                 user = struct.unpack('>h', user)[0]
                 room = data[2:4]
                 room = struct.unpack('>h', room)[0]
-                if user != userid and roomid == room:
-                    data = data[4:]
+                mute = data[4:6]
+                mute = struct.unpack('>h', room)[0]
+                if user != userid and roomid == room and mute == 0:
+                    data = data[6:]
                     stream_output.write(data)
+                if self.record:
+                    data = data[6:]
+                    if mute == 1:
+                        data = data.__init__(len(data))
+                    if user in recording.keys():
+                        recording[user] += data
+                    else:
+                        recording[user] = data
 
 
     def send(self, userid, roomid):
@@ -321,9 +347,9 @@ class MultiUserChatWindow(QWidget):
         async with websockets.connect(uri) as websocket:
             for data in self.recordVoice():
                 if self.mute:
-                    data = struct.pack('>h', userid) + struct.pack('>h', -1) + data
+                    data = struct.pack('>h', userid) + struct.pack('>h', roomid) + struct.pack('>h', 1) + data
                 else:
-                    data = struct.pack('>h', userid) + struct.pack('>h', roomid) + data
+                    data = struct.pack('>h', userid) + struct.pack('>h', roomid) + struct.pack('>h', 0) + data
                 await websocket.send(data)
 
         
