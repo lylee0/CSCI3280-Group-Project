@@ -86,7 +86,7 @@ class MultiUserChatWindow(QWidget):
         memberLayout = QGridLayout()
 
         for x in userInRoom:
-            memberLayout.addWidget(self.MemberUI(x), int((len(userInRoom)-1)/3), int((len(userInRoom)-1)%3))
+            memberLayout.addWidget(self.MemberUI(x), int((userInRoom.index(x)-1)/3), int((userInRoom.index(x)-1)%3))
 
         memberWidget.setLayout(memberLayout)
 
@@ -190,7 +190,7 @@ class MultiUserChatWindow(QWidget):
         return functionBarLayout
     
     def MemberUI(self, name):
-        
+
         memberUI = QLabel()
         memberUI.setText(name)
         memberUI.setAlignment(QtC.Qt.AlignmentFlag.AlignCenter)
