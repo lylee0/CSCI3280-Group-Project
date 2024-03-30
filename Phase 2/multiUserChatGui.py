@@ -298,7 +298,8 @@ class MultiUserChatWindow(QWidget):
         self.online = False
         if recording:
             for x in recording.keys():
-                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}_x"
+                time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{time}_{x}"
                 with wave.open(output, 'wb') as wave:
                     wave.setchannels(CHANNEL)
                     wave.setsamplewidth(sample_width)
