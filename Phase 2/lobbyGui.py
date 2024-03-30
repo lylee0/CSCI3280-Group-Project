@@ -6,11 +6,10 @@ from datetime import datetime
 import asyncio
 import websockets
 import json
-import time
-import nest_asyncio
+import socket
 import multiUserChatGui
 
-host = '112.118.236.172'
+host = socket.gethostbyname(socket.gethostname())
 
 class chatData:
     def __init__(self, id, name, lastChatTime, lastMessage, pinned, conv, parti):
@@ -40,12 +39,14 @@ async def getInitialList(uri):
         async with websockets.connect(uri) as websocket:
             await websocket.send("Read")
             data = await websocket.recv()
+            await websocket.close()
             return data
         
 async def getInitialProfile(uri):
         async with websockets.connect(uri) as websocket:
             await websocket.send("Get,+++" + User)
             data = await websocket.recv()
+            await websocket.close()
             return data
         
 data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://'+host+':8765'))
@@ -105,16 +106,12 @@ class lobbyWindow(QtW.QMainWindow):
         self.currRoom = 0
         self.newChatWindow = newChat()
         self.newChatWindow.status_signal.connect(self.newChatAction)
-        self.callWindow = multiUserChatGui.MultiUserChatWindow()
         self.chatRoomList()
         self.chatRoomDetail()
         self.timer = QtC.QTimer()
         self.timer.timeout.connect(self.getRefresh)
         self.timer.start(1000)
         self.show()
-    
-    def dummy(self):
-        print("H")
     
     def chatRoomList(self):
         self.pinExpand = QtW.QLabel()
@@ -554,12 +551,14 @@ class lobbyWindow(QtW.QMainWindow):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
+            await websocket.close()
             return data
    
     async def sendRead(self, uri):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"Read")
             data = await websocket.recv()
+            await websocket.close()
             return data
 
     async def transformation(self, data):
@@ -646,6 +645,7 @@ class lobbyWindow(QtW.QMainWindow):
         self.infoWindow.show()
     
     def call(self, event):
+        self.callWindow = multiUserChatGui.MultiUserChatWindow(self.currRoom, User)
         self.callWindow.show()
 
     def addParti(self, event):
@@ -734,47 +734,50 @@ class lobbyWindow(QtW.QMainWindow):
 
     def getRefresh(self):
         data = asyncio.get_event_loop().run_until_complete(self.sendRead('ws://'+host+':8765'))
-        data = json.loads(data)
-        global network, chatDataCollection, serverData
-        temp10 = serverData.copy()
-        serverData = []
-        network = data["User"]
-        for x in data["chatRoom"]:
-            if User in x["pinnedBy"]:
-                pin = True
-            else:
-                pin = False
-            temp2 = []
-            for y in x["conv"]:
-                temp = convData(y[0],y[1],y[2])
-                temp2.append(temp)
-            temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
-            serverData.append(temp3)
-        if temp10 != serverData:
-            chatDataCollection = serverData.copy()
-            temp = self.textContext.text()
-            temp2 = self.searchField.text()
-            self.removeLayout(self.listLayout)
-            self.searchField = QtW.QLineEdit()
-            self.pinContent = []
-            self.otherContent = []
-            self.listLayout.addLayout(self.functionBar())
-            self.listLayout.addLayout(self.searchBar())
-            self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
-            self.listLayout.addLayout(self.otherChat(self.otherExpandInd))
-            self.listLayout.setSpacing(5)
-            self.fflag = True
-            self.removeLayout(self.detailLayout)
-            self.sendButton = QtW.QLabel()
-            self.sendButton.setGeometry(0,0,0,0)
-            self.textContext = QtW.QLineEdit()
-            self.textContext.setGeometry(0,0,0,0)
-            self.detailLayout.addLayout(self.infoBar(self.currRoom))
-            self.detailLayout.addLayout(self.content(self.currRoom))
-            self.detailLayout.addLayout(self.chatBox(self.currRoom))
-            self.textContext.setText(temp)
-            self.searchField.setText(temp2)
-            self.searchField.setFocus()
+        try:
+            data = json.loads(data)
+            global network, chatDataCollection, serverData
+            temp10 = serverData.copy()
+            serverData = []
+            network = data["User"]
+            for x in data["chatRoom"]:
+                if User in x["pinnedBy"]:
+                    pin = True
+                else:
+                    pin = False
+                temp2 = []
+                for y in x["conv"]:
+                    temp = convData(y[0],y[1],y[2])
+                    temp2.append(temp)
+                temp3 = chatData(x["id"], x["name"], x["lCT"], x["lM"], pin, temp2, x["parti"])
+                serverData.append(temp3)
+            if temp10 != serverData:
+                chatDataCollection = serverData.copy()
+                temp = self.textContext.text()
+                temp2 = self.searchField.text()
+                self.removeLayout(self.listLayout)
+                self.searchField = QtW.QLineEdit()
+                self.pinContent = []
+                self.otherContent = []
+                self.listLayout.addLayout(self.functionBar())
+                self.listLayout.addLayout(self.searchBar())
+                self.listLayout.addLayout(self.pinChat(self.pinExpandInd))
+                self.listLayout.addLayout(self.otherChat(self.otherExpandInd))
+                self.listLayout.setSpacing(5)
+                self.fflag = True
+                self.removeLayout(self.detailLayout)
+                self.sendButton = QtW.QLabel()
+                self.sendButton.setGeometry(0,0,0,0)
+                self.textContext = QtW.QLineEdit()
+                self.textContext.setGeometry(0,0,0,0)
+                self.detailLayout.addLayout(self.infoBar(self.currRoom))
+                self.detailLayout.addLayout(self.content(self.currRoom))
+                self.detailLayout.addLayout(self.chatBox(self.currRoom))
+                self.textContext.setText(temp)
+                self.searchField.setText(temp2)
+                self.searchField.setFocus()
+        except:
+            print("blank json")
 
     def removeLayout(self, layout):
         while layout.count()>0:
@@ -787,6 +790,7 @@ class lobbyWindow(QtW.QMainWindow):
     async def removeParti(self, uri):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"Update,+++-1,+++remove,+++,+++{User}")
+            await websocket.close()
 
     def closeEvent(self, event):
         asyncio.get_event_loop().run_until_complete(self.removeParti('ws://'+host+':8765'))
@@ -810,6 +814,7 @@ class newChat(QtW.QWidget):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"NewRoom,+++{id},+++{name},+++{user}")
             data = await websocket.recv()
+            await websocket.close()
             return data
 
     async def transformation(self, data):
@@ -884,6 +889,7 @@ class chatInfo(QtW.QWidget):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
+            await websocket.close()
             return data
 
     async def transformation(self, data):
@@ -959,6 +965,7 @@ class newParti(QtW.QWidget):
         async with websockets.connect(uri) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
+            await websocket.close()
             return data
 
     async def transformation(self, data):
