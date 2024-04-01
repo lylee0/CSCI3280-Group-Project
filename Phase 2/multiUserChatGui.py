@@ -29,7 +29,7 @@ FORMAT = pyaudio.paInt16
 CHANNEL = 1
 RATE = 44100
 CHUNK = 1024
-sample_width = 2
+SAMPLEWIDTH = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
@@ -297,28 +297,26 @@ class MultiUserChatWindow(QWidget):
 
     def merge(self):
         global recording
-        width = sample_width
         for x in recording.keys():
             length = len(recording[x])
             break
-        audio_zero = bytes([0] * sample_width * length)
-        audio_merge = AudioSegment(audio_zero,sample_width=width,channels=CHANNEL,frame_rate=RATE)
+        audio_zero = bytes([0] * SAMPLEWIDTH * length)
+        audio_merge = AudioSegment(audio_zero,sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
         for x in recording.keys():
-            audio = AudioSegment(recording[x],sample_width=width,channels=CHANNEL,frame_rate=RATE)
+            audio = AudioSegment(recording[x],sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
             audio_merge = audio.overlay(audio_merge)
         audio_merge = audio_merge.raw_data
         return audio_merge
     
     def writeFile(self, merge_audio):
         #print(merge_audio)
-        global userInRoom, sample_width
-        width = sample_width
+        global userInRoom
         time = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
         if not os.path.exists(path):
             os.makedirs(path)
         output = path + f"\\audio_{time}.mp3"
-        audio = AudioSegment(data=merge_audio, sample_width=width, channels=CHANNEL, frame_rate=RATE)
+        audio = AudioSegment(data=merge_audio, sample_width=SAMPLEWIDTH, channels=CHANNEL, frame_rate=RATE)
         audio.export(output, format="mp3")
         with open(output, 'rb') as f:
             mp3_bytes = f.read()
