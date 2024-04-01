@@ -236,8 +236,6 @@ class MultiUserChatWindow(QWidget):
             audio_merge = self.merge()
             mp3_bytes = self.writeFile(audio_merge)
             asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
-            #write_thread = threading.Thread(target=self.writeFile, args=(audio_merge,))
-            #write_thread.start()
             recording = {}
     
     def EndChatButtonFunction(self, event):
@@ -337,6 +335,12 @@ class MultiUserChatWindow(QWidget):
         userInRoom.remove(self.user)
         self.timer.stop()
         self.online = False
+        self.record = not self.record
+        if recording and not self.record:
+            audio_merge = self.merge()
+            mp3_bytes = self.writeFile(audio_merge)
+            asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
+            recording = {}
 
     def listen(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
