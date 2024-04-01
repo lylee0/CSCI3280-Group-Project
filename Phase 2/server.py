@@ -125,5 +125,5 @@ async def echo(websocket, path):
             CONNECTIONS.remove(websocket)
 
 
-asyncio.get_event_loop().run_until_complete(websockets.serve(echo, "218.250.208.235", 8765))
+asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765))
 asyncio.get_event_loop().run_forever() 
