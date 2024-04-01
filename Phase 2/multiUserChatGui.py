@@ -323,6 +323,8 @@ class MultiUserChatWindow(QWidget):
             wavef.setframerate(RATE)
             wavef.writeframes(merge_audio)   
         wavef.close() 
+        AudioSegment.from_wav(output).export(path + f"\\audio_{time}.mp3", format="mp3")
+        os.remove(output)
 
     def closeEvent(self, event):
         global recording, userInRoom
@@ -337,7 +339,7 @@ class MultiUserChatWindow(QWidget):
 
     async def receiveAudio(self, userid, roomid):
         global recording
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             while self.online:
                 data = await websocket.recv()
                 user = data[:2]
@@ -376,7 +378,7 @@ class MultiUserChatWindow(QWidget):
             yield data
 
     async def sendAudio(self, userid, roomid):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             for data in self.recordVoice():
                 if self.mute:
                     data = struct.pack('>h', userid) + struct.pack('>h', roomid) + struct.pack('>h', 1) + data
