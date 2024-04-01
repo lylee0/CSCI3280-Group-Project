@@ -17,8 +17,9 @@ import json
 import pyaudio
 import struct
 import wave
+import socket
 
-host = "58.153.98.192" #socket.gethostbyname(socket.gethostname())
+host = socket.gethostbyname(socket.gethostname())
 
 uri = 'ws://'+ host +':8765'
 
@@ -32,7 +33,7 @@ sample_width = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
 
 file_start_time = 0
 
@@ -349,7 +350,9 @@ class MultiUserChatWindow(QWidget):
                 if self.record:
                     data = data[6:]
                     if mute == 1:
-                        data = data.__init__(len(data))
+                        data = list(data)
+                        data = [0 for x in data]
+                        data = bytes(data)
                     if user in recording.keys():
                         recording[user] += data
                     else:
