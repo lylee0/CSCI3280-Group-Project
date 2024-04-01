@@ -323,6 +323,7 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         if recording:
+            recording = False
             audio_merge = self.merge()
             write_thread = threading.Thread(target=self.writeFile, args=(audio_merge,))
             write_thread.start()
