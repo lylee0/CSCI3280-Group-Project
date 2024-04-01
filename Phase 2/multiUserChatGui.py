@@ -234,9 +234,10 @@ class MultiUserChatWindow(QWidget):
         self.record = not self.record
         if recording and not self.record:
             audio_merge = self.merge()
-            asyncio.get_event_loop().run_until_complete(self.sendRecording(audio_merge))
-            write_thread = threading.Thread(target=self.writeFile, args=(audio_merge,))
-            write_thread.start()
+            mp3_bytes = self.writeFile(audio_merge)
+            asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
+            #write_thread = threading.Thread(target=self.writeFile, args=(audio_merge,))
+            #write_thread.start()
             recording = {}
     
     def EndChatButtonFunction(self, event):
@@ -325,6 +326,10 @@ class MultiUserChatWindow(QWidget):
         wavef.close() 
         AudioSegment.from_wav(output).export(path + f"\\audio_{time}.mp3", format="mp3")
         os.remove(output)
+        with open(path + f"\\audio_{time}.mp3", 'rb') as file:
+            mp3_bytes = file.read()
+        file.close()
+        return mp3_bytes
 
     def closeEvent(self, event):
         global recording, userInRoom
@@ -337,6 +342,18 @@ class MultiUserChatWindow(QWidget):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
         asyncio.set_event_loop(loop)
 
+    def write_mp3(self, data):
+        global userInRoom
+        time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        output = path + f"\\audio_{time}.mp3"
+        with open(output, 'wb') as mp3f:
+            mp3f.write(data)
+        mp3f.flush()
+        mp3f.close()
+
     async def receiveAudio(self, userid, roomid):
         global recording
         async with websockets.connect(uri, max_size=2**30) as websocket:
@@ -346,7 +363,7 @@ class MultiUserChatWindow(QWidget):
                 user = struct.unpack('>h', user)[0]
                 if user == 32767:
                     if struct.unpack('>h', data[2:4])[0] != self.userid:
-                        write_thread = threading.Thread(target=self.writeFile, args=(data[2:],))
+                        write_thread = threading.Thread(target=self.write_mp3, args=([data[2:]]))
                         write_thread.start()
                 else:
                     room = data[2:4]
@@ -386,9 +403,9 @@ class MultiUserChatWindow(QWidget):
                     data = struct.pack('>h', userid) + struct.pack('>h', roomid) + struct.pack('>h', 0) + data
                 await websocket.send(data)
     
-    async def sendRecording(self, audio_merge):
+    async def sendRecording(self, mp3_bytes):
         async with websockets.connect(uri) as websocket:
-            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + audio_merge
+            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + mp3_bytes
             await websocket.send(data)
             websocket.close()
 
