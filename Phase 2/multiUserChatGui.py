@@ -11,14 +11,14 @@ import websockets
 import threading
 import time
 import sys
-import socket
+from pydub import AudioSegment
 import asyncio
 import json
 import pyaudio
 import struct
 import wave
 
-host = socket.gethostbyname(socket.gethostname())
+host = "58.153.98.192" #socket.gethostbyname(socket.gethostname())
 
 uri = 'ws://'+ host +':8765'
 
@@ -32,7 +32,7 @@ sample_width = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
 
 file_start_time = 0
 
@@ -288,6 +288,33 @@ class MultiUserChatWindow(QWidget):
             await websocket.send(f"VoiceRemove,+++{self.room},+++{self.user}")
             await websocket.close()
 
+    def merge(self):
+        global recording
+        width = sample_width
+        for x in recording.keys():
+            length = len(recording[x])
+            break
+        audio_zero = bytes([0] * sample_width * length)
+        audio_merge = AudioSegment(audio_zero,sample_width=width,channels=CHANNEL,frame_rate=RATE)
+        for x in recording.keys():
+            audio = AudioSegment(recording[x],sample_width=width,channels=CHANNEL,frame_rate=RATE)
+            audio_merge = audio.overlay(audio_merge)
+        audio_merge = audio_merge.raw_data
+        return audio_merge
+    
+    def writeFile(self, merge_audio):
+        global recording, userInRoom
+        time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        output = path + f"\\audio_{time}.wav"
+        with wave.open(output, 'wb') as wavef:
+            wavef.setnchannels(CHANNEL)
+            wavef.setsampwidth(sample_width)
+            wavef.setframerate(RATE)
+            wavef.writeframes(merge_audio)   
+        wavef.close() 
 
     def closeEvent(self, event):
         global recording, userInRoom
@@ -296,14 +323,9 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         if recording:
-            for x in recording.keys():
-                time = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output = os.path.dirname(os.path.abspath(__file__)) + f"\\audio_{time}_{x}.wav"
-                with wave.open(output, 'wb') as wavef:
-                    wavef.setnchannels(CHANNEL)
-                    wavef.setsampwidth(sample_width)
-                    wavef.setframerate(RATE)
-                    wavef.writeframes(recording[x])
+            audio_merge = self.merge()
+            write_thread = threading.Thread(target=self.writeFile, args=(audio_merge,))
+            write_thread.start()
         recording = {}
 
     def listen(self, userid, roomid):
