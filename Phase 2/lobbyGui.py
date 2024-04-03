@@ -54,7 +54,8 @@ async def sendInitialConfig(uri, other):
         async with websockets.connect(uri) as websocket:
             strings = "Connect"
             for x in other:
-                strings.append(",+++" + x)
+                strings += ",+++"
+                strings += x
             await websocket.send(strings)
             await websocket.close()
         for x in other:
@@ -88,7 +89,7 @@ class initialWindow(QtW.QWidget):
         self.setWindowTitle("Chat Room Lobby")
         self.resize(200,100)
         temp = QtW.QVBoxLayout()
-        question = QtW.QLabel("Enter your user name, only proceed when all users are online:")
+        question = QtW.QLabel("Enter your user name, only proceed when all servers are online:")
         response = QtW.QLineEdit()
         temp.addWidget(question)
         temp.addWidget(response)
@@ -116,16 +117,17 @@ class chooseConnection(QtW.QWidget):
         self.setWindowTitle("Chat Room Lobby")
         self.resize(200,100)
         temp = QtW.QVBoxLayout()
-        question = QtW.QLabel("Select all devices online (except yours):")
-        hint = QtW.QLabel("Hint: You can check in cmd with command ipconfig")
-        temp.addWidget(hint)
-        temp.addWidget(question)
         devices = []
         for x in os.popen('arp -a'): 
             x = x.split(" ")
             temp4 = [y for y in x if [w for w in y.split(".") if not w.isdigit()]==[]]
             devices += temp4
+        me = devices.pop(0)
         self.add = []
+        question = QtW.QLabel("Select all devices online:")
+        hint = QtW.QLabel("Your local ip is " + me)
+        temp.addWidget(question)
+        temp.addWidget(hint)
         for x in devices:
             temp2 = QtW.QCheckBox(x,self)
             temp2.stateChanged.connect(lambda chekced, arg = temp2: self.addConnection(arg))
