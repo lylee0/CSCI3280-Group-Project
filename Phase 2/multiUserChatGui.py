@@ -234,6 +234,7 @@ class MultiUserChatWindow(QWidget):
     
     def RecordingButtonFunction(self, event):
         global recording
+        print(recording)
         self.record = not self.record
         if recording and not self.record:
             audio_merge = self.merge()
@@ -318,13 +319,20 @@ class MultiUserChatWindow(QWidget):
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
         if not os.path.exists(path):
             os.makedirs(path)
-        output = path + f"\\audio_{time}.mp3"
-        audio = AudioSegment(data=merge_audio, sample_width=SAMPLEWIDTH, channels=CHANNEL, frame_rate=RATE)
-        audio.export(output, format="mp3")
-        with open(output, 'rb') as f:
-            mp3_bytes = f.read()
-        f.close()
-        return mp3_bytes
+        output = path + f"\\audio_{time}.wav"
+        print(output)
+        with wave.open(output, 'wb') as waves:
+            waves.setnchannels(CHANNEL)
+            waves.setsampwidth(SAMPLEWIDTH)
+            waves.setframerate(RATE)
+            waves.writeframes(merge_audio)
+        return merge_audio
+        #audio = AudioSegment(data=merge_audio, sample_width=SAMPLEWIDTH, channels=CHANNEL, frame_rate=RATE)
+        #audio.export(output, format="mp3")
+        #with open(output, 'rb') as f:
+        #    mp3_bytes = f.read()
+        #f.close()
+        #return mp3_bytes
 
     def closeEvent(self, event):
         global recording, userInRoom
@@ -355,7 +363,7 @@ class MultiUserChatWindow(QWidget):
                     user = struct.unpack('>h', user)[0]
                     if user == 32767:
                         if struct.unpack('>h', data[2:4])[0] != self.userid:
-                            write_thread = threading.Thread(target=self.writeFile, args=([data[2:]]))
+                            write_thread = threading.Thread(target=self.writeFile, args=([data[4:]]))
                             write_thread.start()
                     else:
                         room = data[2:4]
