@@ -3,7 +3,9 @@ import websockets
 import json
 import os
 import socket
-import pyaudio
+import nest_asyncio
+
+nest_asyncio.apply()
 
 CONNECTIONS = []
 otherServer = []

@@ -43,14 +43,17 @@ async def getInitialList(uri):
             await websocket.close()
             return data
         
-async def getInitialProfile(uri):
+async def getInitialProfile(uri, other):
         async with websockets.connect(uri) as websocket:
             await websocket.send("Get,+++" + User)
-            data = await websocket.recv()
             await websocket.close()
-            return data
+        for x in other:
+            async with websockets.connect("ws://" + x + ":8765") as websocket:
+                await websocket.send("Get,+++" + User)
+                await websocket.close()
 
 async def sendInitialConfig(uri, other):
+        global User
         async with websockets.connect(uri) as websocket:
             strings = "Connect"
             for x in other:
@@ -58,10 +61,6 @@ async def sendInitialConfig(uri, other):
                 strings += x
             await websocket.send(strings)
             await websocket.close()
-        for x in other:
-            async with websockets.connect("ws://" + x + ":8765") as websocket:
-                await websocket.send("Get,+++" + User)
-                await websocket.close()
         
 data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://'+host+':8765'))
 
@@ -108,7 +107,6 @@ class initialWindow(QtW.QWidget):
             global User
             User = text
             network.append(User)
-            asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://'+host+':8765'))
             self.close()
 
 class chooseConnection(QtW.QWidget):
@@ -142,6 +140,7 @@ class chooseConnection(QtW.QWidget):
         global otherHost
         otherHost = self.add   
         asyncio.get_event_loop().run_until_complete(sendInitialConfig('ws://'+ host +':8765', otherHost))
+        asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://'+host+':8765', otherHost))
         self.close()
 
     def addConnection(self,temp2):
