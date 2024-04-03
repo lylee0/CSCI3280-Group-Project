@@ -37,14 +37,14 @@ serverData = []
 User = ""
 
 async def getInitialList(uri):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send("Read")
             data = await websocket.recv()
             await websocket.close()
             return data
         
 async def getInitialProfile(uri, other):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send("Get,+++" + User)
             await websocket.close()
         for x in other:
@@ -54,7 +54,7 @@ async def getInitialProfile(uri, other):
 
 async def sendInitialConfig(uri, other):
         global User
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             strings = "Connect"
             for x in other:
                 strings += ",+++"
@@ -600,14 +600,14 @@ class lobbyWindow(QtW.QMainWindow):
             return temp
 
     async def sendUpdate(self, uri, id, method, item, content):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
             await websocket.close()
             return data
    
     async def sendRead(self, uri):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Read")
             data = await websocket.recv()
             await websocket.close()
@@ -842,7 +842,7 @@ class lobbyWindow(QtW.QMainWindow):
                 self.removeLayout(childrenLayout)
 
     async def removeParti(self, uri):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Update,+++-1,+++remove,+++,+++{User}")
             await websocket.close()
 
@@ -865,7 +865,7 @@ class newChat(QtW.QWidget):
         self.box.returnPressed.connect(lambda: self.newChat())
 
     async def sendUpdate(self, uri, id, name, user):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"NewRoom,+++{id},+++{name},+++{user}")
             data = await websocket.recv()
             await websocket.close()
@@ -940,7 +940,7 @@ class chatInfo(QtW.QWidget):
         self.setLayout(self.majorL)
     
     async def sendUpdate(self, uri, id, method, item, content):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
             await websocket.close()
@@ -1016,7 +1016,7 @@ class newParti(QtW.QWidget):
         self.setLayout(tempF)
 
     async def sendUpdate(self, uri, id, method, item, content):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Update,+++{id},+++{method},+++{item},+++{content}")
             data = await websocket.recv()
             await websocket.close()

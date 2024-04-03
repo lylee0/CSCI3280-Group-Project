@@ -21,7 +21,7 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w')
     updatefile.write(json.dumps(json_object))
 
 async def updateServer(uri, content):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send("Forward,+++" + content)
 
 async def echo(websocket, path):

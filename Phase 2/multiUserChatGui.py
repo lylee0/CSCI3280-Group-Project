@@ -250,12 +250,12 @@ class MultiUserChatWindow(QWidget):
 
     
     async def updateMemberData(self):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"VoiceAdd,+++{self.room},+++{self.user}")
             await websocket.close()
 
     async def sendRead(self, uri):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"Read")
             data = await websocket.recv()
             await websocket.close()
@@ -294,7 +294,7 @@ class MultiUserChatWindow(QWidget):
                 self.removeLayout(childrenLayout)
 
     async def removeParti(self):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             await websocket.send(f"VoiceRemove,+++{self.room},+++{self.user}")
             await websocket.close()
 
@@ -403,10 +403,10 @@ class MultiUserChatWindow(QWidget):
                 await websocket.send(data)
     
     async def sendRecording(self, mp3_bytes):
-        async with websockets.connect(uri) as websocket:
+        async with websockets.connect(uri, max_size=2**30) as websocket:
             data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + mp3_bytes
             await websocket.send(data)
-            websocket.close()
+            await websocket.close()
 
         
 
