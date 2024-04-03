@@ -31,11 +31,11 @@ async def echo(websocket, path):
                 CONNECTIONS.remove(websocket)
             websockets.broadcast(CONNECTIONS, message=message)
         else:
+            global otherServer
             message999 = message
             message = message.split(",+++")
 
             if message[0] != "Read" and message[0]!= "Forward":
-                global otherServer
                 for x in otherServer:
                     asyncio.get_event_loop().run_until_complete(updateServer('ws://'+ x +':8765', message999))
 
@@ -52,7 +52,6 @@ async def echo(websocket, path):
                 await websocket.send(json.dumps(json_object))
 
             if message[0] == "Connect":
-                global otherServer
                 for x in range(len(message)):
                     if x != 0:
                         otherServer.append(message[x])

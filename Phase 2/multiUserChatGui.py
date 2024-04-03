@@ -348,7 +348,7 @@ class MultiUserChatWindow(QWidget):
         tempReceiver = otherHost.copy()
         tempReceiver.append(host)
         for x in tempReceiver:
-            async with websockets.connect(x, max_size=2**30) as websocket:
+            async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
                 while self.online:
                     data = await websocket.recv()
                     user = data[:2]
