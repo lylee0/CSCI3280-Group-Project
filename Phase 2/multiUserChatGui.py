@@ -234,7 +234,6 @@ class MultiUserChatWindow(QWidget):
     
     def RecordingButtonFunction(self, event):
         global recording
-        print(recording)
         self.record = not self.record
         if recording and not self.record:
             audio_merge = self.merge()
