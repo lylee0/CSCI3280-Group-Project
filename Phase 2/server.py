@@ -26,6 +26,7 @@ async def updateServer(uri, content):
 
 async def echo(websocket, path):
     global CONNECTIONS
+    websocket.max_size = 2**30
     CONNECTIONS.append(websocket) 
     async for message in websocket:
         if type(message) == bytes:
