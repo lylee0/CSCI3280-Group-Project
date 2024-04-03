@@ -23,6 +23,7 @@ host = socket.gethostbyname(socket.gethostname())
 
 uri = 'ws://'+ host +':8765'
 
+otherHost = []
 userInRoom = []
 
 FORMAT = pyaudio.paInt16
@@ -40,12 +41,14 @@ file_start_time = 0
 recording = {}
 
 class MultiUserChatWindow(QWidget):
-    def __init__(self, userid, roomID, user):
+    def __init__(self, userid, roomID, user, otherHost2):
         super().__init__()
 
+        global otherHost
         self.online=True
         self.mute = False
         self.video = False
+        otherHost = otherHost2
         self.setWindowTitle("Chatroom")
         self.resize(1024,640)
         self.setMinimumSize(1024,500)
@@ -342,33 +345,36 @@ class MultiUserChatWindow(QWidget):
 
     async def receiveAudio(self, userid, roomid):
         global recording
-        async with websockets.connect(uri, max_size=2**30) as websocket:
-            while self.online:
-                data = await websocket.recv()
-                user = data[:2]
-                user = struct.unpack('>h', user)[0]
-                if user == 32767:
-                    if struct.unpack('>h', data[2:4])[0] != self.userid:
-                        write_thread = threading.Thread(target=self.writeFile, args=([data[2:]]))
-                        write_thread.start()
-                else:
-                    room = data[2:4]
-                    room = struct.unpack('>h', room)[0]
-                    mute = data[4:6]
-                    mute = struct.unpack('>h', mute)[0]
-                    if user != userid and roomid == room and mute == 0:
-                        data = data[6:]
-                        stream_output.write(data)
-                    if self.record:
-                        data = data[6:]
-                        if mute == 1:
-                            data = list(data)
-                            data = [0 for x in data]
-                            data = bytes(data)
-                        if user in recording.keys():
-                            recording[user] += data
-                        else:
-                            recording[user] = data
+        tempReceiver = otherHost.copy()
+        tempReceiver.append(host)
+        for x in tempReceiver:
+            async with websockets.connect(x, max_size=2**30) as websocket:
+                while self.online:
+                    data = await websocket.recv()
+                    user = data[:2]
+                    user = struct.unpack('>h', user)[0]
+                    if user == 32767:
+                        if struct.unpack('>h', data[2:4])[0] != self.userid:
+                            write_thread = threading.Thread(target=self.writeFile, args=([data[2:]]))
+                            write_thread.start()
+                    else:
+                        room = data[2:4]
+                        room = struct.unpack('>h', room)[0]
+                        mute = data[4:6]
+                        mute = struct.unpack('>h', mute)[0]
+                        if user != userid and roomid == room and mute == 0:
+                            data = data[6:]
+                            stream_output.write(data)
+                        if self.record:
+                            data = data[6:]
+                            if mute == 1:
+                                data = list(data)
+                                data = [0 for x in data]
+                                data = bytes(data)
+                            if user in recording.keys():
+                                recording[user] += data
+                            else:
+                                recording[user] = data
 
 
     def send(self, userid, roomid):

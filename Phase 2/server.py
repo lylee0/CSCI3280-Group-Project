@@ -6,6 +6,7 @@ import socket
 import pyaudio
 
 CONNECTIONS = []
+otherServer = []
 
 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
     json_object = json.load(openfile)
@@ -17,6 +18,10 @@ json_object["VoiceRoom"] = {}
 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
     updatefile.write(json.dumps(json_object))
 
+async def updateServer(uri, content):
+        async with websockets.connect(uri) as websocket:
+            await websocket.send("Forward,+++" + content)
+
 async def echo(websocket, path):
     global CONNECTIONS
     CONNECTIONS.append(websocket) 
@@ -25,8 +30,17 @@ async def echo(websocket, path):
             if websocket in CONNECTIONS: 
                 CONNECTIONS.remove(websocket)
             websockets.broadcast(CONNECTIONS, message=message)
-        else:    
+        else:
+            message999 = message
             message = message.split(",+++")
+
+            if message[0] != "Read" and message[0]!= "Forward":
+                global otherServer
+                for x in otherServer:
+                    asyncio.get_event_loop().run_until_complete(updateServer('ws://'+ x +':8765', message999))
+
+            if message[0] == "Forward":
+                message.pop(0)
 
             if message[0] == "Get":
                 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
@@ -36,6 +50,12 @@ async def echo(websocket, path):
                 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
                 await websocket.send(json.dumps(json_object))
+
+            if message[0] == "Connect":
+                global otherServer
+                for x in range(len(message)):
+                    if x != 0:
+                        otherServer.append(message[x])
 
             if message[0] == "Update":
                 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:

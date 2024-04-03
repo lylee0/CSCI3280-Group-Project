@@ -10,6 +10,7 @@ import socket
 import multiUserChatGui
 
 host = socket.gethostbyname(socket.gethostname())
+otherHost = []
 
 class chatData:
     def __init__(self, id, name, lastChatTime, lastMessage, pinned, conv, parti):
@@ -48,6 +49,18 @@ async def getInitialProfile(uri):
             data = await websocket.recv()
             await websocket.close()
             return data
+
+async def sendInitialConfig(uri, other):
+        async with websockets.connect(uri) as websocket:
+            strings = "Connect"
+            for x in other:
+                strings.append(",+++" + x)
+            await websocket.send(strings)
+            await websocket.close()
+        for x in other:
+            async with websockets.connect("ws://" + x + ":8765") as websocket:
+                await websocket.send("Get,+++" + User)
+                await websocket.close()
         
 data = asyncio.get_event_loop().run_until_complete(getInitialList('ws://'+host+':8765'))
 
@@ -75,7 +88,7 @@ class initialWindow(QtW.QWidget):
         self.setWindowTitle("Chat Room Lobby")
         self.resize(200,100)
         temp = QtW.QVBoxLayout()
-        question = QtW.QLabel("Enter your user name:")
+        question = QtW.QLabel("Enter your user name, only proceed when all users are online:")
         response = QtW.QLineEdit()
         temp.addWidget(question)
         temp.addWidget(response)
@@ -96,6 +109,44 @@ class initialWindow(QtW.QWidget):
             network.append(User)
             asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://'+host+':8765'))
             self.close()
+
+class chooseConnection(QtW.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Chat Room Lobby")
+        self.resize(200,100)
+        temp = QtW.QVBoxLayout()
+        question = QtW.QLabel("Select all devices online (except yours):")
+        hint = QtW.QLabel("Hint: You can check in cmd with command ipconfig")
+        temp.addWidget(hint)
+        temp.addWidget(question)
+        devices = []
+        for x in os.popen('arp -a'): 
+            x = x.split(" ")
+            temp4 = [y for y in x if [w for w in y.split(".") if not w.isdigit()]==[]]
+            devices += temp4
+        self.add = []
+        for x in devices:
+            temp2 = QtW.QCheckBox(x,self)
+            temp2.stateChanged.connect(lambda chekced, arg = temp2: self.addConnection(arg))
+            temp.addWidget(temp2)
+        proceed = QtW.QPushButton("Continue")
+        proceed.clicked.connect(lambda: self.prompt())
+        temp.addWidget(proceed)
+        self.setLayout(temp)
+        self.show()
+    
+    def prompt(self):
+        global otherHost
+        otherHost = self.add   
+        asyncio.get_event_loop().run_until_complete(sendInitialConfig('ws://'+ host +':8765', otherHost))
+        self.close()
+
+    def addConnection(self,temp2):
+        if temp2.isChecked():
+            self.add.append(temp2.text())
+        else:
+            self.add.remove(temp2.text())
 
 class lobbyWindow(QtW.QMainWindow):
     def __init__(self):
@@ -645,8 +696,9 @@ class lobbyWindow(QtW.QMainWindow):
         self.infoWindow.show()
     
     def call(self, event):
+        global otherHost
         userid = [x for x in serverData if x.id == self.currRoom][0].parti.index(User)
-        self.callWindow = multiUserChatGui.MultiUserChatWindow(userid, self.currRoom, User)
+        self.callWindow = multiUserChatGui.MultiUserChatWindow(userid, self.currRoom, User, otherHost)
         self.callWindow.show()
 
     def addParti(self, event):
@@ -1009,5 +1061,7 @@ app = QtW.QApplication([])
 initial = initialWindow()
 app.exec_()
 if User != "":
+    connection = chooseConnection()
+    app.exec_()
     lobby = lobbyWindow()
     app.exec_()
