@@ -362,9 +362,9 @@ class MultiUserChatWindow(QWidget):
         #return mp3_bytes
     def wavToMp3(self):
         global output, merge_thread, write_thread
-        #merge_thread.join()
-        #write_thread.join()
-        time.sleep(5)
+        merge_thread.join()
+        write_thread.join()
+        #time.sleep(5)
         wav_file = AudioSegment.from_wav(output)
         output = output[:-3] + "mp3"
         wav_file.export(output, format='mp3')
