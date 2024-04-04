@@ -420,12 +420,14 @@ class MultiUserChatWindow(QWidget):
                         else:
                             if data[4:] == b'music':
                                 self.music = False
-                                global playing
-                                playing.stop()
-                                os.remove("temp.mp3")
+                                stream_music.close()
+                                #os.remove("temp.wav")
                             else:
+                                global audio
                                 self.music = True
-                                play_music_thread = threading.Thread(target=self.playMusic, args=(data[4:],))
+                                info = self.mp3ToWav(data[4:])
+                                stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
+                                play_music_thread = threading.Thread(target=self.playMusic, args=(stream_music,))
                                 play_music_thread.start()
                     else:
                         room = data[2:4]
@@ -446,19 +448,35 @@ class MultiUserChatWindow(QWidget):
                             else:
                                 recording[user] = [data]
         
-    def playMusic(self, data):
-        # please implement a button for start and stop
-        # for start, send music
-        # for stop, music.stop()
-        global playing
+    def mp3ToWav(self, data):
         with open("temp.mp3", 'wb') as f:
             f.write(data)
             f.flush()
             f.close()
-        music = AudioSegment.from_mp3("temp.mp3")
-
-        playing = play(music)
+        audio_file = AudioSegment.from_mp3("temp.mp3")
+        audio_file.export("temp.wav", format="wav")
         os.remove("temp.mp3")
+        audio_file = wave.open("temp.wav", 'rb')
+        global audio
+        info = [audio.get_format_from_width(audio_file.getsampwidth()), audio_file.getnchannels(), audio_file.getframerate()]
+        audio_file.close()
+        return info
+
+    def playMusic(self, stream_music):
+        # please implement a button for start and stop
+        # for start, send music
+        # for stop, music.stop()
+        audio_file = wave.open("temp.wav", 'rb')
+        data = audio_file.readframes(CHUNK)
+        while self.music:
+            try:
+                data = audio_file.readframes(CHUNK)
+                stream_music.write(data)
+            except:
+                break
+        audio_file.close()
+        if os.path.exists("temp.wav"):
+            os.remove("temp.wav")
 
     def send(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.sendAudio(userid, roomid))
