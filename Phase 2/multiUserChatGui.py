@@ -18,6 +18,7 @@ import pyaudio
 import struct
 import wave
 import socket
+from pydub.playback import play
 
 host = socket.gethostbyname(socket.gethostname())
 
@@ -34,11 +35,11 @@ SAMPLEWIDTH = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
-music_path = './songs/Mandarin_(Instrumental)'
+music_path = './songs/Mandarin_(Instrumental).mp3'
 
 recording = {}
 mergeRecording = []
@@ -59,6 +60,7 @@ class MultiUserChatWindow(QWidget):
         self.user = user
         self.userid = userid
         self.record = False
+        self.music = False
         self.firstInd = True
         self.updateMember()
         self.timer = QtC.QTimer()
@@ -233,27 +235,27 @@ class MultiUserChatWindow(QWidget):
         return
     
     def ShareScreenButtonFunction(self, event):
-        return
-    
-    async def send_start(self):
-        async with websockets.connect(uri, max_size=2**30) as websocket:
-            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + b'Start'
-            await websocket.send(data)
-            await websocket.close()
+        self.music = not self.music
+        if self.music:
+            asyncio.new_event_loop().run_until_complete(self.sendMusic())
+        else:
+            asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+        #return
 
-    async def send_stop(self):
+    async def send_signal(self, message):
         async with websockets.connect(uri, max_size=2**30) as websocket:
-            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + b'Stop'
+            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + message
             await websocket.send(data)
             await websocket.close()
 
     def RecordingButtonFunction(self, event):
+        # after clicking stop, need to wait for write file thread to finish, then users can click start again
         global recording, merge_thread, write_thread
         self.record = not self.record
         if self.record:
-            asyncio.get_event_loop().run_until_complete(self.send_start())
+            asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
         if recording and not self.record:
-            asyncio.get_event_loop().run_until_complete(self.send_stop())
+            asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
     def EndChatButtonFunction(self, event):
         self.close()
@@ -285,12 +287,9 @@ class MultiUserChatWindow(QWidget):
             if temp != userInRoom:
                 if self.firstInd:
                     userid = self.userid
-                    tempReceiver = otherHost.copy()
-                    tempReceiver.append(host)
-                    for x in tempReceiver:
-                        listen_thread = threading.Thread(target=self.listen, args=(userid, self.room, x))
-                        listen_thread.start()
+                    self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
                     self.send_thread = threading.Thread(target=self.send, args=(userid, self.room))
+                    self.listen_thread.start()
                     self.send_thread.start()
                     self.firstInd = False
                 self.removeLayout(self.mainLayout)
@@ -331,6 +330,7 @@ class MultiUserChatWindow(QWidget):
                         flag = recording[x].pop(0)
                         if flag == b'Stop':
                             mergeRecording.append(b'Stop')
+                            recording = {}
                             return
                         audio = AudioSegment(flag,sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
                         audio_merge = audio.overlay(audio_merge)
@@ -358,7 +358,6 @@ class MultiUserChatWindow(QWidget):
                 if flag == b'Stop':
                     global recording
                     waves.close()
-                    recording = {}
                     return
                 waves.writeframes(flag) 
 
@@ -378,57 +377,88 @@ class MultiUserChatWindow(QWidget):
         self.online = False
         if self.record:
             self.record = False
-            asyncio.get_event_loop().run_until_complete(self.send_stop())
+            asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
+            # suppose that user will not receive the stop after closing the windows
+            for x in recording.keys():
+                recording[x].append(b'Stop')
+            global file_format
+            if file_format == 1:
+                mp3_thread = threading.Thread(target=self.wavToMp3)
+                mp3_thread.start()
 
-    def listen(self, userid, roomid, x):
-        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
+    def listen(self, userid, roomid):
+        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
         asyncio.set_event_loop(loop)
-    
-    async def receiveAudio(self, userid, roomid, x):
-        global recording
-        async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
-            await websocket.send("Listener")
-            while self.online:
-                data = await websocket.recv()
-                user = data[:2]
-                user = struct.unpack('>h', user)[0]
-                if user == 32767:
-                    global merge_thread, write_thread
-                    if data[4:] == b'Start':
-                        self.record = True
-                        waves = self.writeHeader()
-                        merge_thread = threading.Thread(target=self.merge)
-                        merge_thread.start()
-                        write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-                        write_thread.start()
-                    elif data[4:] == b'Stop':
-                        self.record = False
-                        for x in recording.keys():
-                            recording[x].append(b'Stop')
-                        global file_format
-                        if file_format == 1:
-                            mp3_thread = threading.Thread(target=self.wavToMp3)
-                            mp3_thread.start()
-                else:
-                    room = data[2:4]
-                    room = struct.unpack('>h', room)[0]
-                    mute = data[4:6]
-                    mute = struct.unpack('>h', mute)[0]
-                    if user != userid and roomid == room and mute == 0:
-                        data = data[6:]
-                        stream_output.write(data)
-                    if self.record:
-                        data = data[6:]
-                        if mute == 1:
-                            data = list(data)
-                            data = [0 for x in data]
-                            data = bytes(data)
-                        if user in recording.keys():
-                            recording[user].append(data)
-                        else:
-                            recording[user] = [data]
-            await websocket.send("LostConnection")
 
+    async def receiveAudio(self, userid, roomid):
+        global recording
+        tempReceiver = otherHost.copy()
+        tempReceiver.append(host)
+        for x in tempReceiver:
+            async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
+                while self.online:
+                    data = await websocket.recv()
+                    user = data[:2]
+                    user = struct.unpack('>h', user)[0]
+                    if user == 32767:
+                        global merge_thread, write_thread
+                        if data[4:] == b'Start':
+                            self.record = True
+                            waves = self.writeHeader()
+                            merge_thread = threading.Thread(target=self.merge)
+                            merge_thread.start()
+                            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+                            write_thread.start()
+                        elif data[4:] == b'Stop':
+                            self.record = False
+                            for x in recording.keys():
+                                recording[x].append(b'Stop')
+                            global file_format
+                            if file_format == 1:
+                                mp3_thread = threading.Thread(target=self.wavToMp3)
+                                mp3_thread.start()
+                        else:
+                            if data[4:] == b'music':
+                                self.music = False
+                                global playing
+                                playing.stop()
+                                os.remove("temp.mp3")
+                            else:
+                                self.music = True
+                                play_music_thread = threading.Thread(target=self.playMusic, args=(data[4:],))
+                                play_music_thread.start()
+                    else:
+                        room = data[2:4]
+                        room = struct.unpack('>h', room)[0]
+                        mute = data[4:6]
+                        mute = struct.unpack('>h', mute)[0]
+                        if user != userid and roomid == room and mute == 0:
+                            data = data[6:]
+                            stream_output.write(data)
+                        if self.record:
+                            data = data[6:]
+                            if mute == 1:
+                                data = list(data)
+                                data = [0 for x in data]
+                                data = bytes(data)
+                            if user in recording.keys():
+                                recording[user].append(data)
+                            else:
+                                recording[user] = [data]
+        
+    def playMusic(self, data):
+        # please implement a button for start and stop
+        # for start, send music
+        # for stop, music.stop()
+        global playing
+        with open("temp.mp3", 'wb') as f:
+            f.write(data)
+            f.flush()
+            f.close()
+        music = AudioSegment.from_mp3("temp.mp3")
+
+        playing = play(music)
+        os.remove("temp.mp3")
 
     def send(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.sendAudio(userid, roomid))
@@ -448,13 +478,14 @@ class MultiUserChatWindow(QWidget):
                     data = struct.pack('>h', userid) + struct.pack('>h', roomid) + struct.pack('>h', 0) + data
                 await websocket.send(data)
     
-    async def sendRecording(self, mp3_bytes):
+    async def sendMusic(self):
+        global music_path
+        with open(music_path, 'rb') as f:
+            music_bytes = f.read()
         async with websockets.connect(uri, max_size=2**30) as websocket:
-            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + mp3_bytes
+            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + music_bytes
             await websocket.send(data)
             await websocket.close()
-
-        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
