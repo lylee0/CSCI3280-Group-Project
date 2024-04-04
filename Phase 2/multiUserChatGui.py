@@ -243,8 +243,6 @@ class MultiUserChatWindow(QWidget):
             write_thread = threading.Thread(target=self.writeFile, args=(waves,))
             write_thread.start()
         if recording and not self.record:
-            #audio_merge = self.merge()
-            #mp3_bytes = self.writeFile(audio_merge)
             mp3_bytes = self.wavToMp3()
             asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
             recording = {}
@@ -394,11 +392,6 @@ class MultiUserChatWindow(QWidget):
         self.record = not self.record
         self.record = not self.record
         if recording and not self.record:
-            #audio_merge = self.merge()
-            #mp3_bytes = self.writeFile(audio_merge)
-            global merge_thread, write_thread
-            merge_thread.join()
-            write_thread.join()
             mp3_bytes = self.wavToMp3()
             asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
             recording = {}
