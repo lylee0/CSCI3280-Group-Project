@@ -179,7 +179,7 @@ class MultiUserChatWindow(QWidget):
         #recording button
         self.recordingButton = QLabel()
         self.recordingButton.setGeometry(0, 0, 0, 0)
-        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
+        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
         self.recordingButton.setFixedSize(100,100)
         self.recordingButton.mousePressEvent = self.RecordingButtonFunction
         self.recordingButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -420,7 +420,7 @@ class MultiUserChatWindow(QWidget):
                 if user == 32767:
                     global merge_thread, write_thread
                     if data[4:] == b'Start':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
+                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
                         self.record = True
                         waves = self.writeHeader()
                         merge_thread = threading.Thread(target=self.merge)
@@ -428,7 +428,7 @@ class MultiUserChatWindow(QWidget):
                         write_thread = threading.Thread(target=self.writeFile, args=(waves,))
                         write_thread.start()
                     elif data[4:] == b'Stop':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
+                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
                         self.record = False
                         for x in recording.keys():
                             recording[x].append(b'Stop')
