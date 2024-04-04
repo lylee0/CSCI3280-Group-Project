@@ -39,7 +39,7 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
-music_path = './songs/Mandarin_(Instrumental).mp3'
+music_path = './songs/RedSun_(Instrumental).mp3'
 
 recording = {}
 mergeRecording = []
@@ -62,7 +62,7 @@ class MultiUserChatWindow(QWidget):
         self.record = False
         self.music = False
         self.music_person = False
-        self.playback = False
+        #self.playback = False
         self.firstInd = True
         self.updateMember()
         self.timer = QtC.QTimer()
@@ -240,7 +240,7 @@ class MultiUserChatWindow(QWidget):
         self.music = not self.music
         if self.music:
             self.music_person = True
-            self.playback = True
+            #self.playback = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
@@ -507,7 +507,7 @@ class MultiUserChatWindow(QWidget):
         audio_file.close()
         if os.path.exists("temp.wav"):
             os.remove("temp.wav")
-        self.playback = False
+        #self.playback = False
 
     def send(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.sendAudio(userid, roomid))
