@@ -62,6 +62,7 @@ class MultiUserChatWindow(QWidget):
         self.record = False
         self.music = False
         self.music_person = False
+        self.playback = False
         self.firstInd = True
         self.updateMember()
         self.timer = QtC.QTimer()
@@ -239,6 +240,7 @@ class MultiUserChatWindow(QWidget):
         self.music = not self.music
         if self.music:
             self.music_person = True
+            self.playback = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
@@ -255,10 +257,8 @@ class MultiUserChatWindow(QWidget):
         global recording, merge_thread, write_thread
         self.record = not self.record
         if self.record:
-            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
         if recording and not self.record:
-            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
     def EndChatButtonFunction(self, event):
@@ -393,9 +393,10 @@ class MultiUserChatWindow(QWidget):
 
         if self.music:
             self.music = False
-            if self.music_person:
+            '''if self.music_person:
                 self.music_person = False
-                asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+                self.playback = False
+                asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))'''
             global stream_music
             stream_music.close()
 
@@ -416,6 +417,7 @@ class MultiUserChatWindow(QWidget):
                     if user == 32767:
                         global merge_thread, write_thread
                         if data[4:] == b'Start':
+                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
                             self.record = True
                             waves = self.writeHeader()
                             merge_thread = threading.Thread(target=self.merge)
@@ -423,6 +425,7 @@ class MultiUserChatWindow(QWidget):
                             write_thread = threading.Thread(target=self.writeFile, args=(waves,))
                             write_thread.start()
                         elif data[4:] == b'Stop':
+                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
                             self.record = False
                             for x in recording.keys():
                                 recording[x].append(b'Stop')
@@ -450,6 +453,9 @@ class MultiUserChatWindow(QWidget):
                         if user != userid and roomid == room and mute == 0:
                             data = data[6:]
                             stream_output.write(data)
+                        '''if user == userid and roomid == room and mute == 0 and self.playback == True:
+                            data = data[6:]
+                            stream_output.write(data)'''
                         if self.record:
                             data = data[6:]
                             if mute == 1:
@@ -497,6 +503,7 @@ class MultiUserChatWindow(QWidget):
         audio_file.close()
         if os.path.exists("temp.wav"):
             os.remove("temp.wav")
+        self.playback = False
 
     def send(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.sendAudio(userid, roomid))
