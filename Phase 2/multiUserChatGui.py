@@ -61,6 +61,7 @@ class MultiUserChatWindow(QWidget):
         self.userid = userid
         self.record = False
         self.music = False
+        self.music_person = False
         self.firstInd = True
         self.updateMember()
         self.timer = QtC.QTimer()
@@ -237,6 +238,7 @@ class MultiUserChatWindow(QWidget):
     def ShareScreenButtonFunction(self, event):
         self.music = not self.music
         if self.music:
+            self.music_person = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
@@ -377,7 +379,7 @@ class MultiUserChatWindow(QWidget):
         self.online = False
         if self.record:
             self.record = False
-            asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
+            #asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
             # suppose that user will not receive the stop after closing the windows
             for x in recording.keys():
                 recording[x].append(b'Stop')
@@ -385,6 +387,15 @@ class MultiUserChatWindow(QWidget):
             if file_format == 1:
                 mp3_thread = threading.Thread(target=self.wavToMp3)
                 mp3_thread.start()
+                self.music = not self.music
+
+        if self.music:
+            self.music = False
+            if self.music_person:
+                self.music_person = False
+                asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+            global stream_music
+            stream_music.close()
 
     def listen(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
@@ -418,16 +429,16 @@ class MultiUserChatWindow(QWidget):
                                 mp3_thread = threading.Thread(target=self.wavToMp3)
                                 mp3_thread.start()
                         else:
+                            global stream_music
                             if data[4:] == b'music':
                                 self.music = False
                                 stream_music.close()
-                                #os.remove("temp.wav")
                             else:
                                 global audio
                                 self.music = True
                                 info = self.mp3ToWav(data[4:])
                                 stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
-                                play_music_thread = threading.Thread(target=self.playMusic, args=(stream_music,))
+                                play_music_thread = threading.Thread(target=self.playMusic)
                                 play_music_thread.start()
                     else:
                         room = data[2:4]
@@ -443,11 +454,11 @@ class MultiUserChatWindow(QWidget):
                                 data = list(data)
                                 data = [0 for x in data]
                                 data = bytes(data)
-                            if (not recording) and (not self.music):
+                            '''if not self.music:
                                 if 'music' in recording:
                                     recording['music'].append(bytes([0 for x in list(data)]))
                                 else:                                
-                                    recording['music'] = [bytes([0 for x in list(data)])]
+                                    recording['music'] = [bytes([0 for x in list(data)])]'''
                             if user in recording.keys():
                                 recording[user].append(data)
                             else:
@@ -467,18 +478,18 @@ class MultiUserChatWindow(QWidget):
         audio_file.close()
         return info
 
-    def playMusic(self, stream_music):
+    def playMusic(self):
         # please implement a button for start and stop
         # for start, send music
         # for stop, music.stop()
-        global recording
+        global stream_music, recording
         audio_file = wave.open("temp.wav", 'rb')
         data = audio_file.readframes(CHUNK)
         while self.music:
             try:
                 data = audio_file.readframes(CHUNK)
                 stream_music.write(data)
-                recording['music'].append(data)
+                #recording['music'].append(data)
             except:
                 break
         audio_file.close()
