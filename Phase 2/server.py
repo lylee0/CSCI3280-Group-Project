@@ -34,11 +34,11 @@ async def echo(websocket, path):
             global otherServer
 
             if message=="Listener":
-                print("add connection, id: " + websocket.id)
+                print("add connection, id: " + str(websocket.id))
                 CONNECTIONS.append(websocket)
             
             if message=="LostConnection":
-                print("lost connection, id: " + websocket.id)
+                print("lost connection, id: " + str(websocket.id))
                 CONNECTIONS.remove(websocket)
                         
             message999 = message
