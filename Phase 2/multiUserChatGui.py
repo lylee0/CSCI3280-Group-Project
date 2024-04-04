@@ -34,11 +34,12 @@ SAMPLEWIDTH = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
 
 file_start_time = 0
 
 recording = {}
+mergeRecording = []
 
 class MultiUserChatWindow(QWidget):
     def __init__(self, userid, roomID, user, otherHost2):
@@ -233,11 +234,18 @@ class MultiUserChatWindow(QWidget):
         return
     
     def RecordingButtonFunction(self, event):
-        global recording
+        global recording, merge_thread, write_thread
         self.record = not self.record
+        if self.record:
+            waves = self.writeHeader()
+            merge_thread = threading.Thread(target=self.merge)
+            merge_thread.start()
+            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+            write_thread.start()
         if recording and not self.record:
-            audio_merge = self.merge()
-            mp3_bytes = self.writeFile(audio_merge)
+            #audio_merge = self.merge()
+            #mp3_bytes = self.writeFile(audio_merge)
+            mp3_bytes = self.wavToMp3()
             asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
             recording = {}
     
@@ -299,39 +307,83 @@ class MultiUserChatWindow(QWidget):
             await websocket.close()
 
     def merge(self):
-        global recording
-        for x in recording.keys():
-            length = len(recording[x])
-            break
-        audio_zero = bytes([0] * SAMPLEWIDTH * length)
-        audio_merge = AudioSegment(audio_zero,sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
-        for x in recording.keys():
-            audio = AudioSegment(recording[x],sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
-            audio_merge = audio.overlay(audio_merge)
-        audio_merge = audio_merge.raw_data
-        return audio_merge
+        global recording, mergeRecording
+        while True:
+            if recording:
+                for x in recording.keys():
+                    if not recording[x]:
+                        time.sleep(5)
+                        if not recording:
+                            return
+                        elif not recording[x]:
+                            return
+                    length = len(recording[x][0])
+                    break
+                try:
+                    audio_zero = bytes([0] * SAMPLEWIDTH * length)
+                    audio_merge = AudioSegment(audio_zero,sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
+                    for x in recording.keys():
+                        audio = AudioSegment(recording[x].pop(0),sample_width=SAMPLEWIDTH,channels=CHANNEL,frame_rate=RATE)
+                        audio_merge = audio.overlay(audio_merge)
+                    mergeRecording.append(audio_merge.raw_data)
+                except:
+                    continue
     
-    def writeFile(self, merge_audio):
-        #print(merge_audio)
-        global userInRoom
+    def writeHeader(self):
+        global userInRoom, mergeRecording, output
         time = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
         if not os.path.exists(path):
             os.makedirs(path)
         output = path + f"\\audio_{time}.wav"
-        print(output)
-        with wave.open(output, 'wb') as waves:
-            waves.setnchannels(CHANNEL)
-            waves.setsampwidth(SAMPLEWIDTH)
-            waves.setframerate(RATE)
-            waves.writeframes(merge_audio)
-        return merge_audio
+        #print(output)
+        waves =  wave.open(output, 'wb')
+        waves.setnchannels(CHANNEL)
+        waves.setsampwidth(SAMPLEWIDTH)
+        waves.setframerate(RATE)
+        return waves
+
+    def writeFile(self, waves):
+        #print(merge_audio)
+        while True:
+            if not mergeRecording:
+                time.sleep(5)
+                if not mergeRecording:
+                    break
+            else:
+                waves.writeframes(mergeRecording.pop(0))
+        waves.close()
+        #return merge_audio
         #audio = AudioSegment(data=merge_audio, sample_width=SAMPLEWIDTH, channels=CHANNEL, frame_rate=RATE)
         #audio.export(output, format="mp3")
         #with open(output, 'rb') as f:
         #    mp3_bytes = f.read()
         #f.close()
         #return mp3_bytes
+    def wavToMp3(self):
+        global output, merge_thread, write_thread
+        #merge_thread.join()
+        #write_thread.join()
+        time.sleep(5)
+        wav_file = AudioSegment.from_wav(output)
+        output = output[:-3] + "mp3"
+        wav_file.export(output, format='mp3')
+        with open(output, 'rb') as f:
+            mp3_bytes = f.read()
+            f.close()
+        return mp3_bytes
+    
+    def write_mp3(self, audio):
+        global userInRoom, mergeRecording, output
+        time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        output = path + f"\\audio_{time}.mp3"
+        with open(output, 'wb') as f:
+            f.write(audio)
+            f.flush()
+            f.close()
 
     def closeEvent(self, event):
         global recording, userInRoom
@@ -340,9 +392,14 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         self.record = not self.record
+        self.record = not self.record
         if recording and not self.record:
-            audio_merge = self.merge()
-            mp3_bytes = self.writeFile(audio_merge)
+            #audio_merge = self.merge()
+            #mp3_bytes = self.writeFile(audio_merge)
+            global merge_thread, write_thread
+            merge_thread.join()
+            write_thread.join()
+            mp3_bytes = self.wavToMp3()
             asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
             recording = {}
 
@@ -362,7 +419,7 @@ class MultiUserChatWindow(QWidget):
                     user = struct.unpack('>h', user)[0]
                     if user == 32767:
                         if struct.unpack('>h', data[2:4])[0] != self.userid:
-                            write_thread = threading.Thread(target=self.writeFile, args=([data[4:]]))
+                            write_thread = threading.Thread(target=self.write_mp3, args=([data[4:]]))
                             write_thread.start()
                     else:
                         room = data[2:4]
@@ -379,9 +436,11 @@ class MultiUserChatWindow(QWidget):
                                 data = [0 for x in data]
                                 data = bytes(data)
                             if user in recording.keys():
-                                recording[user] += data
+                                recording[user].append(data)
+                                #recording[user] += data
                             else:
-                                recording[user] = data
+                                recording[user] = [data]
+                                #recording[user] = data
 
 
     def send(self, userid, roomid):
