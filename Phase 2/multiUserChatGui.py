@@ -443,6 +443,11 @@ class MultiUserChatWindow(QWidget):
                                 data = list(data)
                                 data = [0 for x in data]
                                 data = bytes(data)
+                            if (not recording) and (not self.music):
+                                if 'music' in recording:
+                                    recording['music'].append(bytes([0 for x in list(data)]))
+                                else:                                
+                                    recording['music'] = [bytes([0 for x in list(data)])]
                             if user in recording.keys():
                                 recording[user].append(data)
                             else:
@@ -466,12 +471,14 @@ class MultiUserChatWindow(QWidget):
         # please implement a button for start and stop
         # for start, send music
         # for stop, music.stop()
+        global recording
         audio_file = wave.open("temp.wav", 'rb')
         data = audio_file.readframes(CHUNK)
         while self.music:
             try:
                 data = audio_file.readframes(CHUNK)
                 stream_music.write(data)
+                recording['music'].append(data)
             except:
                 break
         audio_file.close()
