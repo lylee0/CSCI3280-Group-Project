@@ -255,8 +255,10 @@ class MultiUserChatWindow(QWidget):
         global recording, merge_thread, write_thread
         self.record = not self.record
         if self.record:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
         if recording and not self.record:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
     def EndChatButtonFunction(self, event):
@@ -525,6 +527,6 @@ class MultiUserChatWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    w = TestApp()
+    w = MultiUserChatWindow(1, 1, 1, 1)
     w.show()
     app.exec_()
