@@ -38,7 +38,7 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
-music_path = ''
+music_path = './songs/Mandarin_(Instrumental)'
 
 recording = {}
 mergeRecording = []
@@ -353,12 +353,16 @@ class MultiUserChatWindow(QWidget):
             if mergeRecording:
                 flag = mergeRecording.pop(0)
                 if flag == b'Stop':
+                    global recording
                     waves.close()
+                    recording = {}
                     return
                 waves.writeframes(flag) 
 
     def wavToMp3(self):
-        global output
+        global output, merge_thread, write_thread
+        merge_thread.join()
+        write_thread.join()
         wav_file = AudioSegment.from_wav(output)
         wav_file.export(output[:-3] + "mp3", format='mp3')
         os.remove(output)
@@ -372,6 +376,13 @@ class MultiUserChatWindow(QWidget):
         if self.record:
             self.record = False
             asyncio.get_event_loop().run_until_complete(self.send_stop())
+            # suppose that user will not receive the stop after closing the windows
+            for x in recording.keys():
+                recording[x].append(b'Stop')
+            global file_format
+            if file_format == 1:
+                mp3_thread = threading.Thread(target=self.wavToMp3)
+                mp3_thread.start()
 
     def listen(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
@@ -388,6 +399,7 @@ class MultiUserChatWindow(QWidget):
                     user = data[:2]
                     user = struct.unpack('>h', user)[0]
                     if user == 32767:
+                        global merge_thread, write_thread
                         if data[4:] == b'Start':
                             self.record = True
                             waves = self.writeHeader()
@@ -399,13 +411,10 @@ class MultiUserChatWindow(QWidget):
                             self.record = False
                             for x in recording.keys():
                                 recording[x].append(b'Stop')
-                            merge_thread.join()
-                            write_thread.join()
                             global file_format
                             if file_format == 1:
                                 mp3_thread = threading.Thread(target=self.wavToMp3)
                                 mp3_thread.start()
-                            recording = {}
                     else:
                         room = data[2:4]
                         room = struct.unpack('>h', room)[0]
