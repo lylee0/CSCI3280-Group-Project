@@ -291,9 +291,14 @@ class MultiUserChatWindow(QWidget):
             if temp != userInRoom:
                 if self.firstInd:
                     userid = self.userid
-                    self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
+                    #self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
+                    tempReceiver = otherHost.copy()
+                    tempReceiver.append(host)
+                    for x in tempReceiver:
+                        listen_thread = threading.Thread(target=self.listen, args=(userid, self.room, x))
+                        listen_thread.start()
                     self.send_thread = threading.Thread(target=self.send, args=(userid, self.room))
-                    self.listen_thread.start()
+                    #self.listen_thread.start()
                     self.send_thread.start()
                     self.firstInd = False
                 self.removeLayout(self.mainLayout)
@@ -400,77 +405,76 @@ class MultiUserChatWindow(QWidget):
             global stream_music
             stream_music.close()
 
-    def listen(self, userid, roomid):
-        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
+    def listen(self, userid, roomid, x):
+        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
         asyncio.set_event_loop(loop)
 
-    async def receiveAudio(self, userid, roomid):
+    async def receiveAudio(self, userid, roomid, x):
         global recording
-        tempReceiver = otherHost.copy()
-        tempReceiver.append(host)
-        for x in tempReceiver:
-            async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
-                while self.online:
-                    data = await websocket.recv()
-                    user = data[:2]
-                    user = struct.unpack('>h', user)[0]
-                    if user == 32767:
-                        global merge_thread, write_thread
-                        if data[4:] == b'Start':
-                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
-                            self.record = True
-                            waves = self.writeHeader()
-                            merge_thread = threading.Thread(target=self.merge)
-                            merge_thread.start()
-                            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-                            write_thread.start()
-                        elif data[4:] == b'Stop':
-                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
-                            self.record = False
-                            for x in recording.keys():
-                                recording[x].append(b'Stop')
-                            global file_format
-                            if file_format == 1:
-                                mp3_thread = threading.Thread(target=self.wavToMp3)
-                                mp3_thread.start()
-                        else:
-                            global stream_music
-                            if data[4:] == b'music':
-                                self.music = False
-                                stream_music.close()
-                            else:
-                                global audio
-                                self.music = True
-                                info = self.mp3ToWav(data[4:])
-                                stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
-                                play_music_thread = threading.Thread(target=self.playMusic)
-                                play_music_thread.start()
+        async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
+            await websocket.send("Listener")
+            while self.online:
+                data = await websocket.recv()
+                user = data[:2]
+                user = struct.unpack('>h', user)[0]
+                if user == 32767:
+                    global merge_thread, write_thread
+                    if data[4:] == b'Start':
+                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(25, 25)))
+                        self.record = True
+                        waves = self.writeHeader()
+                        merge_thread = threading.Thread(target=self.merge)
+                        merge_thread.start()
+                        write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+                        write_thread.start()
+                    elif data[4:] == b'Stop':
+                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(25, 25)))
+                        self.record = False
+                        for x in recording.keys():
+                            recording[x].append(b'Stop')
+                        global file_format
+                        if file_format == 1:
+                            mp3_thread = threading.Thread(target=self.wavToMp3)
+                            mp3_thread.start()
                     else:
-                        room = data[2:4]
-                        room = struct.unpack('>h', room)[0]
-                        mute = data[4:6]
-                        mute = struct.unpack('>h', mute)[0]
-                        if user != userid and roomid == room and mute == 0:
-                            data = data[6:]
-                            stream_output.write(data)
-                        '''if user == userid and roomid == room and mute == 0 and self.playback == True:
+                        global stream_music
+                        if data[4:] == b'music':
+                            self.music = False
+                            stream_music.close()
+                        else:
+                            global audio
+                            self.music = True
+                            info = self.mp3ToWav(data[4:])
+                            stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
+                            play_music_thread = threading.Thread(target=self.playMusic)
+                            play_music_thread.start()
+                else:
+                    room = data[2:4]
+                    room = struct.unpack('>h', room)[0]
+                    mute = data[4:6]
+                    mute = struct.unpack('>h', mute)[0]
+                    if user != userid and roomid == room and mute == 0:
+                        data = data[6:]
+                        stream_output.write(data)
+                    '''if user == userid and roomid == room and mute == 0 and self.playback == True:
                             data = data[6:]
                             stream_output.write(data)'''
-                        if self.record:
-                            data = data[6:]
-                            if mute == 1:
-                                data = list(data)
-                                data = [0 for x in data]
-                                data = bytes(data)
+                    if self.record:
+                        data = data[6:]
+                        if mute == 1:
+                            data = list(data)
+                            data = [0 for x in data]
+                            data = bytes(data)
                             '''if not self.music:
                                 if 'music' in recording:
                                     recording['music'].append(bytes([0 for x in list(data)]))
                                 else:                                
                                     recording['music'] = [bytes([0 for x in list(data)])]'''
-                            if user in recording.keys():
-                                recording[user].append(data)
-                            else:
-                                recording[user] = [data]
+                        if user in recording.keys():
+                            recording[user].append(data)
+                        else:
+                            recording[user] = [data]
+            await websocket.send("LostConnection")
         
     def mp3ToWav(self, data):
         with open("temp.mp3", 'wb') as f:
