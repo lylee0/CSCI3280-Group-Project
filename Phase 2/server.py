@@ -27,18 +27,24 @@ async def updateServer(uri, content):
 async def echo(websocket, path):
     global CONNECTIONS
     websocket.max_size = 2**30
-    CONNECTIONS.append(websocket) 
     async for message in websocket:
         if type(message) == bytes:
-            if websocket in CONNECTIONS: 
-                CONNECTIONS.remove(websocket)
             websockets.broadcast(CONNECTIONS, message=message)
         else:
             global otherServer
+
+            if message=="Listener":
+                print("add connection, id: " + websocket.id)
+                CONNECTIONS.append(websocket)
+            
+            if message=="LostConnection":
+                print("lost connection, id: " + websocket.id)
+                CONNECTIONS.remove(websocket)
+                        
             message999 = message
             message = message.split(",+++")
-
-            if message[0] != "Read" and message[0]!= "Forward":
+            
+            if message[0] != "Read" and message[0]!= "Forward" and message[0] != "Listener":
                 for x in otherServer:
                     asyncio.get_event_loop().run_until_complete(updateServer('ws://'+ x +':8765', message999))
 
@@ -143,9 +149,7 @@ async def echo(websocket, path):
                     json_object["VoiceRoom"][room].remove(username)
                 with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
-            
-            CONNECTIONS.remove(websocket)
 
 
-asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765))
+asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765, ping_interval=None))
 asyncio.get_event_loop().run_forever() 

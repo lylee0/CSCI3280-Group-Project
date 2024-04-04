@@ -34,7 +34,7 @@ SAMPLEWIDTH = 2
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=3)
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
@@ -285,9 +285,12 @@ class MultiUserChatWindow(QWidget):
             if temp != userInRoom:
                 if self.firstInd:
                     userid = self.userid
-                    self.listen_thread = threading.Thread(target=self.listen, args=(userid, self.room))
+                    tempReceiver = otherHost.copy()
+                    tempReceiver.append(host)
+                    for x in tempReceiver:
+                        listen_thread = threading.Thread(target=self.listen, args=(userid, self.room, x))
+                        listen_thread.start()
                     self.send_thread = threading.Thread(target=self.send, args=(userid, self.room))
-                    self.listen_thread.start()
                     self.send_thread.start()
                     self.firstInd = False
                 self.removeLayout(self.mainLayout)
@@ -376,63 +379,55 @@ class MultiUserChatWindow(QWidget):
         if self.record:
             self.record = False
             asyncio.get_event_loop().run_until_complete(self.send_stop())
-            # suppose that user will not receive the stop after closing the windows
-            for x in recording.keys():
-                recording[x].append(b'Stop')
-            global file_format
-            if file_format == 1:
-                mp3_thread = threading.Thread(target=self.wavToMp3)
-                mp3_thread.start()
 
-    def listen(self, userid, roomid):
-        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
+    def listen(self, userid, roomid, x):
+        loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
         asyncio.set_event_loop(loop)
-
-    async def receiveAudio(self, userid, roomid):
+    
+    async def receiveAudio(self, userid, roomid, x):
         global recording
-        tempReceiver = otherHost.copy()
-        tempReceiver.append(host)
-        for x in tempReceiver:
-            async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
-                while self.online:
-                    data = await websocket.recv()
-                    user = data[:2]
-                    user = struct.unpack('>h', user)[0]
-                    if user == 32767:
-                        global merge_thread, write_thread
-                        if data[4:] == b'Start':
-                            self.record = True
-                            waves = self.writeHeader()
-                            merge_thread = threading.Thread(target=self.merge)
-                            merge_thread.start()
-                            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-                            write_thread.start()
-                        elif data[4:] == b'Stop':
-                            self.record = False
-                            for x in recording.keys():
-                                recording[x].append(b'Stop')
-                            global file_format
-                            if file_format == 1:
-                                mp3_thread = threading.Thread(target=self.wavToMp3)
-                                mp3_thread.start()
-                    else:
-                        room = data[2:4]
-                        room = struct.unpack('>h', room)[0]
-                        mute = data[4:6]
-                        mute = struct.unpack('>h', mute)[0]
-                        if user != userid and roomid == room and mute == 0:
-                            data = data[6:]
-                            stream_output.write(data)
-                        if self.record:
-                            data = data[6:]
-                            if mute == 1:
-                                data = list(data)
-                                data = [0 for x in data]
-                                data = bytes(data)
-                            if user in recording.keys():
-                                recording[user].append(data)
-                            else:
-                                recording[user] = [data]
+        async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
+            await websocket.send("Listener")
+            while self.online:
+                data = await websocket.recv()
+                user = data[:2]
+                user = struct.unpack('>h', user)[0]
+                if user == 32767:
+                    global merge_thread, write_thread
+                    if data[4:] == b'Start':
+                        self.record = True
+                        waves = self.writeHeader()
+                        merge_thread = threading.Thread(target=self.merge)
+                        merge_thread.start()
+                        write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+                        write_thread.start()
+                    elif data[4:] == b'Stop':
+                        self.record = False
+                        for x in recording.keys():
+                            recording[x].append(b'Stop')
+                        global file_format
+                        if file_format == 1:
+                            mp3_thread = threading.Thread(target=self.wavToMp3)
+                            mp3_thread.start()
+                else:
+                    room = data[2:4]
+                    room = struct.unpack('>h', room)[0]
+                    mute = data[4:6]
+                    mute = struct.unpack('>h', mute)[0]
+                    if user != userid and roomid == room and mute == 0:
+                        data = data[6:]
+                        stream_output.write(data)
+                    if self.record:
+                        data = data[6:]
+                        if mute == 1:
+                            data = list(data)
+                            data = [0 for x in data]
+                            data = bytes(data)
+                        if user in recording.keys():
+                            recording[user].append(data)
+                        else:
+                            recording[user] = [data]
+            await websocket.send("LostConnection")
 
 
     def send(self, userid, roomid):
