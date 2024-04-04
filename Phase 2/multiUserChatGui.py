@@ -233,19 +233,25 @@ class MultiUserChatWindow(QWidget):
     def ShareScreenButtonFunction(self, event):
         return
     
+    async def send_start(self):
+        async with websockets.connect(uri, max_size=2**30) as websocket:
+            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + b'Start'
+            await websocket.send(data)
+            await websocket.close()
+
+    async def send_stop(self):
+        async with websockets.connect(uri, max_size=2**30) as websocket:
+            data = struct.pack('>h', 32767) + struct.pack('>h', self.userid) + b'Stop'
+            await websocket.send(data)
+            await websocket.close()
+
     def RecordingButtonFunction(self, event):
         global recording, merge_thread, write_thread
         self.record = not self.record
         if self.record:
-            waves = self.writeHeader()
-            merge_thread = threading.Thread(target=self.merge)
-            merge_thread.start()
-            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-            write_thread.start()
+            asyncio.get_event_loop().run_until_complete(self.send_start())
         if recording and not self.record:
-            mp3_bytes = self.wavToMp3()
-            asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
-            recording = {}
+            asyncio.get_event_loop().run_until_complete(self.send_stop())
     
     def EndChatButtonFunction(self, event):
         self.close()
@@ -351,17 +357,9 @@ class MultiUserChatWindow(QWidget):
             else:
                 waves.writeframes(mergeRecording.pop(0))
         waves.close()
-        #return merge_audio
-        #audio = AudioSegment(data=merge_audio, sample_width=SAMPLEWIDTH, channels=CHANNEL, frame_rate=RATE)
-        #audio.export(output, format="mp3")
-        #with open(output, 'rb') as f:
-        #    mp3_bytes = f.read()
-        #f.close()
-        #return mp3_bytes
+
     def wavToMp3(self):
-        global output, merge_thread, write_thread
-        merge_thread.join()
-        write_thread.join()
+        global output
         #time.sleep(5)
         wav_file = AudioSegment.from_wav(output)
         output = output[:-3] + "mp3"
@@ -392,9 +390,7 @@ class MultiUserChatWindow(QWidget):
         self.record = not self.record
         self.record = not self.record
         if recording and not self.record:
-            mp3_bytes = self.wavToMp3()
-            asyncio.get_event_loop().run_until_complete(self.sendRecording(mp3_bytes))
-            recording = {}
+            asyncio.get_event_loop().run_until_complete(self.send_stop())
 
     def listen(self, userid, roomid):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid))
@@ -411,9 +407,19 @@ class MultiUserChatWindow(QWidget):
                     user = data[:2]
                     user = struct.unpack('>h', user)[0]
                     if user == 32767:
-                        if struct.unpack('>h', data[2:4])[0] != self.userid:
-                            write_thread = threading.Thread(target=self.write_mp3, args=([data[4:]]))
+                        if data[4:] == b'Start':
+                            self.record = True
+                            waves = self.writeHeader()
+                            merge_thread = threading.Thread(target=self.merge)
+                            merge_thread.start()
+                            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
                             write_thread.start()
+                        else:
+                            data[4:] == b'Stop'
+                            self.record = False
+                            merge_thread.join()
+                            write_thread.join()
+                            recording = {}
                     else:
                         room = data[2:4]
                         room = struct.unpack('>h', room)[0]
@@ -430,10 +436,8 @@ class MultiUserChatWindow(QWidget):
                                 data = bytes(data)
                             if user in recording.keys():
                                 recording[user].append(data)
-                                #recording[user] += data
                             else:
                                 recording[user] = [data]
-                                #recording[user] = data
 
 
     def send(self, userid, roomid):
