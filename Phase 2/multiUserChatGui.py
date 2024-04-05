@@ -1,3 +1,4 @@
+import os.path
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPalette, QColor, QPixmap
 from PyQt5.QtCore import Qt, QSize, QMargins
@@ -40,6 +41,7 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
+music_dict = 'Phase 2\\songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
 recording = {}
@@ -74,7 +76,8 @@ class MultiUserChatWindow(QWidget):
         self.video = False
         self.voiceChange = False
         otherHost = otherHost2
-
+        music_path = os.listdir(os.path.abspath(os.path.join(os.getcwd(), music_dict)))[0]
+        music_path = f"./songs/{music_path}"
         self.setWindowTitle("Chatroom")
         self.resize(1024,640)
         self.setMinimumSize(1024,500)
