@@ -72,6 +72,7 @@ class MultiUserChatWindow(QWidget):
         self.online=True
         self.mute = False
         self.video = False
+        self.voiceChange = False
         otherHost = otherHost2
         self.setWindowTitle("Chatroom")
         self.resize(1024,640)
@@ -130,12 +131,10 @@ class MultiUserChatWindow(QWidget):
         functionBarLayout = QHBoxLayout()
         functionBarLayout.setContentsMargins(QMargins(30,0,30,0))
 
-
-
+        #I/O device dropdowns
         deviceLayout = QVBoxLayout()
 
-        #input device dropdown
-
+        #input device
         self.inputDeivceDropdown = QComboBox()
         self.inputDeivceDropdown.setFixedWidth(200)
         self.inputDeivceDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
@@ -147,8 +146,7 @@ class MultiUserChatWindow(QWidget):
         self.inputDeivceDropdown.setCurrentIndex(inputDeviceID)
         deviceLayout.addWidget(self.inputDeivceDropdown)
 
-        #input device dropdown
-
+        #output device
         self.outputDeivceDropdown = QComboBox()
         self.outputDeivceDropdown.setFixedWidth(200)
         self.outputDeivceDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
@@ -162,26 +160,30 @@ class MultiUserChatWindow(QWidget):
 
         functionBarLayout.addLayout(deviceLayout)
 
+
+
         #mute button
         self.muteButton = QLabel()
         self.muteButton.setGeometry(0, 0, 0, 0)
         if not self.mute:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(25, 25)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(50, 50)))
         else:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(25, 25)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(50, 50)))
         self.muteButton.setFixedSize(100,100)
         self.muteButton.mousePressEvent = self.MuteButtonFunction
         self.muteButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
         
         functionBarLayout.addWidget(self.muteButton)
 
+
+
         #video button
         self.videoButton = QLabel()
         self.videoButton.setGeometry(0, 0, 0, 0)
         if not self.video:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(25, 25)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(50, 50)))
         else:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(25, 25)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(50, 50)))
         self.videoButton.setFixedSize(100,100)
         self.videoButton.mousePressEvent = self.VideoButtonFunction
         self.videoButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -193,7 +195,7 @@ class MultiUserChatWindow(QWidget):
         #member list button
         self.memberListButton = QLabel()
         self.memberListButton.setGeometry(0, 0, 0, 0)
-        self.memberListButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\memberlist.png").scaled(QSize(25, 25)))
+        self.memberListButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\memberlist.png").scaled(QSize(50, 50)))
         self.memberListButton.setFixedSize(100,100)
         self.memberListButton.mousePressEvent = self.MemberListButtonFunction
         self.memberListButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -205,7 +207,7 @@ class MultiUserChatWindow(QWidget):
         #chat room button
         self.chatRoomButton = QLabel()
         self.chatRoomButton.setGeometry(0, 0, 0, 0)
-        self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\chatroom.png").scaled(QSize(25, 25)))
+        self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\chatroom.png").scaled(QSize(50, 50)))
         self.chatRoomButton.setFixedSize(100,100)
         self.chatRoomButton.mousePressEvent = self.ChatRoomButtonFunction
         self.chatRoomButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -217,7 +219,7 @@ class MultiUserChatWindow(QWidget):
         #share screen button
         self.shareScreenButton = QLabel()
         self.shareScreenButton.setGeometry(0, 0, 0, 0)
-        self.shareScreenButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\share_screen.png").scaled(QSize(25, 25)))
+        self.shareScreenButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\share_screen.png").scaled(QSize(50, 50)))
         self.shareScreenButton.setFixedSize(100,100)
         self.shareScreenButton.mousePressEvent = self.ShareScreenButtonFunction
         self.shareScreenButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -238,8 +240,22 @@ class MultiUserChatWindow(QWidget):
 
 
 
+        #voice change button
+        self.voiceChangeButton = QLabel()
+        self.voiceChangeButton.setGeometry(0, 0, 0, 0)
+        if not self.voiceChange:
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_off.png").scaled(QSize(50, 50)))
+        else:
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_on.png").scaled(QSize(50, 50)))
+        self.videoButton.setFixedSize(100,100)
+        self.voiceChangeButton.mousePressEvent = self.VoiceChangeButtonFunction
+        self.voiceChangeButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
+
+        functionBarLayout.addWidget(self.voiceChangeButton)
+
+
+
         #end chat button
-        endChatButton = QPushButton()
         self.endChatButton = QLabel()
         self.endChatButton.setGeometry(0, 0, 0, 0)
         self.endChatButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\end_chat.png").scaled(QSize(50, 50)))
@@ -268,17 +284,17 @@ class MultiUserChatWindow(QWidget):
     def MuteButtonFunction(self, event):
         self.mute = not self.mute
         if (self.mute):
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(25, 25)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(50, 50)))
         else:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(25, 25)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(50, 50)))
 
 
     def VideoButtonFunction(self, event):
         self.video = not self.video
         if (self.video):
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(25, 25)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(50, 50)))
         else:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(25, 25)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(50, 50)))
 
     def MemberListButtonFunction(self, event):
         
@@ -314,6 +330,13 @@ class MultiUserChatWindow(QWidget):
         if recording and not self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
+    def VoiceChangeButtonFunction(self, event):
+        self.voiceChange = not self.voiceChange
+        if not self.voiceChange:
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_off.png").scaled(QSize(50, 50)))
+        else:
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_on.png").scaled(QSize(50, 50)))
+
     def EndChatButtonFunction(self, event):
         self.close()
     
