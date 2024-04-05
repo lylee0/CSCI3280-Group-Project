@@ -68,12 +68,13 @@ class MultiUserChatWindow(QWidget):
     def __init__(self, userid, roomID, user, otherHost2):
         super().__init__()
 
-        global otherHost
+        global otherHost, music_path
         self.online=True
         self.mute = False
         self.video = False
         self.voiceChange = False
         otherHost = otherHost2
+
         self.setWindowTitle("Chatroom")
         self.resize(1024,640)
         self.setMinimumSize(1024,500)
@@ -216,15 +217,18 @@ class MultiUserChatWindow(QWidget):
 
 
 
-        #share screen button
-        self.shareScreenButton = QLabel()
-        self.shareScreenButton.setGeometry(0, 0, 0, 0)
-        self.shareScreenButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\share_screen.png").scaled(QSize(50, 50)))
-        self.shareScreenButton.setFixedSize(100,100)
-        self.shareScreenButton.mousePressEvent = self.ShareScreenButtonFunction
-        self.shareScreenButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
+        #music button
+        self.musicButton = QLabel()
+        self.musicButton.setGeometry(0, 0, 0, 0)
+        if not self.music:
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_off.png").scaled(QSize(50, 50)))
+        else:
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_on.png").scaled(QSize(50, 50)))
+        self.musicButton.setFixedSize(100,100)
+        self.musicButton.mousePressEvent = self.MusicButtonFunction
+        self.musicButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
 
-        functionBarLayout.addWidget(self.shareScreenButton)
+        functionBarLayout.addWidget(self.musicButton)
 
 
 
@@ -305,14 +309,16 @@ class MultiUserChatWindow(QWidget):
     def ChatRoomButtonFunction(self, event):
         return
     
-    def ShareScreenButtonFunction(self, event):
+    def MusicButtonFunction(self, event):
         self.music = not self.music
         if self.music:
             self.music_person = True
             #self.playback = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_off.png").scaled(QSize(50, 50)))
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_on.png").scaled(QSize(50, 50)))
         #return
 
     async def send_signal(self, message):
