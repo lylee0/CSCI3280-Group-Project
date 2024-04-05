@@ -8,6 +8,7 @@ import websockets
 import json
 import socket
 import multiUserChatGui
+import platform
 
 host = socket.gethostbyname(socket.gethostname())
 otherHost = []
@@ -113,32 +114,66 @@ class chooseConnection(QtW.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Chat Room Lobby")
-        self.resize(200,100)
+        self.resize(300, 300)
         temp = QtW.QVBoxLayout()
         devices = []
+        self.ip = []
         for x in os.popen('arp -a'): 
-            x = x.split(" ")
-            temp4 = [y for y in x if [w for w in y.split(".") if not w.isdigit()]==[]]
-            devices += temp4
-        me = devices.pop(0)
+            if platform.system() == "Windows":
+                x = x.split(" ")
+                temp4 = [y for y in x if [w for w in y.split(".") if not w.isdigit()]==[]]
+                devices += temp4
+            else:
+                x = x.split(")")
+                x = x[0].split("(")
+                temp4 = [y for y in x if [w for w in y.split(".") if not w.isdigit()]==[]]
+                devices += temp4
         self.add = []
+        temp.addWidget(QtW.QLabel())
         question = QtW.QLabel("Select all devices online:")
-        hint = QtW.QLabel("Your local ip is " + me)
+        hint = QtW.QLabel("Your local ip is " + host)
         temp.addWidget(question)
         temp.addWidget(hint)
+        searchbox = QtW.QLineEdit()
+        searchbox.textChanged.connect(lambda arg = searchbox.text(): self.search(arg))
+        temp.addWidget(searchbox)
+        scroll = QtW.QScrollArea()
+        tempgroup = QtW.QWidget()
+        templayout = QtW.QVBoxLayout()
         for x in devices:
             temp2 = QtW.QCheckBox(x,self)
             temp2.stateChanged.connect(lambda chekced, arg = temp2: self.addConnection(arg))
-            temp.addWidget(temp2)
+            temp2.setFixedHeight(15)
+            temp2.setStyleSheet("margin: 0 2")
+            self.ip.append(temp2)
+            templayout.addWidget(temp2)
+        templayout.addWidget(QtW.QLabel())
+        templayout.setSpacing(0)
+        tempgroup.setLayout(templayout)
+        scroll.setWidget(tempgroup)
+        temp.addWidget(scroll)
         proceed = QtW.QPushButton("Continue")
         proceed.clicked.connect(lambda: self.prompt())
         temp.addWidget(proceed)
+        temp.addWidget(QtW.QLabel())
         self.setLayout(temp)
         self.show()
     
+    def search(self, text):
+            print(text)
+            for y in self.ip:
+                if text == "":
+                    y.show()
+                else:
+                    if not text in y.text():
+                        y.hide()
+                    else: 
+                        y.show()
+
+
     def prompt(self):
         global otherHost
-        otherHost = self.add   
+        otherHost = self.add 
         asyncio.get_event_loop().run_until_complete(sendInitialConfig('ws://'+ host +':8765', otherHost))
         asyncio.get_event_loop().run_until_complete(getInitialProfile('ws://'+host+':8765', otherHost))
         self.close()
