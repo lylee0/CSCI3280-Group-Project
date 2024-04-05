@@ -19,6 +19,7 @@ import struct
 import wave
 import socket
 from pydub.playback import play
+import showDevice
 
 host = socket.gethostbyname(socket.gethostname())
 
@@ -43,6 +44,25 @@ music_path = './songs/RedSun_(Instrumental).mp3'
 
 recording = {}
 mergeRecording = []
+class MemberListPopUp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Member List")
+        self.setFixedSize(700, 500)
+        self.initUI()
+
+    def initUI(self):
+        
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+
+        for name in userInRoom:
+            nameLabel = QLabel()
+            nameLabel.setText(name)
+            nameLabel.setStyleSheet("QLabel{font-size: 18pt;}")
+            layout.addWidget(nameLabel)
+
+        self.setLayout(layout)
 
 class MultiUserChatWindow(QWidget):
     def __init__(self, userid, roomID, user, otherHost2):
@@ -110,6 +130,38 @@ class MultiUserChatWindow(QWidget):
         functionBarLayout = QHBoxLayout()
         functionBarLayout.setContentsMargins(QMargins(30,0,30,0))
 
+
+
+        deviceLayout = QVBoxLayout()
+
+        #input device dropdown
+
+        self.inputDeivceDropdown = QComboBox()
+        self.inputDeivceDropdown.setFixedWidth(200)
+        self.inputDeivceDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
+
+        inputDeviceID, inputDevices = showDevice.getDeviceList()
+        for inputDevice in inputDevices:
+            self.inputDeivceDropdown.addItem(inputDevice[1])
+
+        self.inputDeivceDropdown.setCurrentIndex(inputDeviceID)
+        deviceLayout.addWidget(self.inputDeivceDropdown)
+
+        #input device dropdown
+
+        self.outputDeivceDropdown = QComboBox()
+        self.outputDeivceDropdown.setFixedWidth(200)
+        self.outputDeivceDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
+
+        outputDeviceID, outputDevices = showDevice.getOutputDeviceList()
+        for outputDevice in outputDevices:
+            self.outputDeivceDropdown.addItem(outputDevice[1])
+
+        self.outputDeivceDropdown.setCurrentIndex(outputDeviceID - len(inputDevices))
+        deviceLayout.addWidget(self.outputDeivceDropdown)
+
+        functionBarLayout.addLayout(deviceLayout)
+
         #mute button
         self.muteButton = QLabel()
         self.muteButton.setGeometry(0, 0, 0, 0)
@@ -122,8 +174,6 @@ class MultiUserChatWindow(QWidget):
         self.muteButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
         
         functionBarLayout.addWidget(self.muteButton)
-
-
 
         #video button
         self.videoButton = QLabel()
@@ -231,7 +281,10 @@ class MultiUserChatWindow(QWidget):
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(25, 25)))
 
     def MemberListButtonFunction(self, event):
-        return
+        
+
+        self.memberListPopUp = MemberListPopUp()
+        self.memberListPopUp.show()
     
     def ChatRoomButtonFunction(self, event):
         return

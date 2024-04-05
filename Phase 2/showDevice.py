@@ -1,6 +1,11 @@
 import pyaudio
+import sounddevice as sd
 
 def getDeviceList():
+
+    current_input_id = sd.default.device['input']
+    print(f"Default Input Device ID: {current_input_id}\n")
+
     p = pyaudio.PyAudio()
     returnList = []
     info = p.get_host_api_info_by_index(0)
@@ -10,9 +15,13 @@ def getDeviceList():
             print("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
             returnList.append([i, p.get_device_info_by_host_api_device_index(0, i).get('name')])
     print(returnList)
-    return returnList
+    return current_input_id, returnList
 
 def getOutputDeviceList():
+
+    current_output_id = sd.default.device['output']
+    print(f"Default Output Device ID: {current_output_id}\n")
+
     p = pyaudio.PyAudio()
     returnList = []
     info = p.get_host_api_info_by_index(0)
@@ -24,7 +33,7 @@ def getOutputDeviceList():
             print("    Name:", device_info.get('name'))
             returnList.append([i, device_info.get('name')])
     print(returnList)
-    return returnList
+    return current_output_id, returnList
 
 if __name__ == "__main__":
     getDeviceList()
