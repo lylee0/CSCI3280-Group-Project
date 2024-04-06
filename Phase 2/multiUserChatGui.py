@@ -34,6 +34,8 @@ CHANNEL = 1
 RATE = 44100
 CHUNK = 1024
 SAMPLEWIDTH = 2
+a, temp222 = showDevice.getDeviceList()
+b, temp333 = showDevice.getOutputDeviceList()
 
 audio = pyaudio.PyAudio()
 stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
