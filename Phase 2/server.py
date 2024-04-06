@@ -151,5 +151,5 @@ async def echo(websocket, path):
                     updatefile.write(json.dumps(json_object))
 
 
-asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765, ping_interval=None))
+asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765, ping_interval=1))
 asyncio.get_event_loop().run_forever() 
