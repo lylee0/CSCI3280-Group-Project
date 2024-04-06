@@ -41,7 +41,7 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
-music_dict = 'Phase 2\\songs'
+music_dict = 'songs'
 music_path = '.\\songs\\RedSun_(Instrumental).mp3'
 
 recording = {}
