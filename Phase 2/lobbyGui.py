@@ -225,7 +225,7 @@ class lobbyWindow(QtW.QMainWindow):
     def functionBar(self):
         functionBar = QtW.QHBoxLayout()
         newChat = QtW.QLabel()
-        newChat.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\chat.png").scaled(QtC.QSize(20, 20)))
+        newChat.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/chat.png").scaled(QtC.QSize(20, 20)))
         newChat.setFixedSize(20,20)
         newChat.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
         newChat.mousePressEvent = self.addChatRoom
@@ -250,7 +250,7 @@ class lobbyWindow(QtW.QMainWindow):
         #Title component
         pinTitle = QtW.QHBoxLayout()
         self.pinExpand = QtW.QLabel()
-        self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\collapse.png").scaled(QtC.QSize(10, 10)))
+        self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/collapse.png").scaled(QtC.QSize(10, 10)))
         self.pinExpand.setFixedSize(10,10)
         self.pinExpand.mousePressEvent = self.changeStatusPin
         pinTitle.addWidget(self.pinExpand)
@@ -309,7 +309,7 @@ class lobbyWindow(QtW.QMainWindow):
         #Title component
         otherTitle = QtW.QHBoxLayout()
         self.otherExpand = QtW.QLabel()
-        self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\collapse.png").scaled(QtC.QSize(10, 10)))
+        self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/collapse.png").scaled(QtC.QSize(10, 10)))
         self.otherExpand.setFixedSize(10,10)
         self.otherExpand.mousePressEvent = self.changeStatusOther
         otherTitle.addWidget(self.otherExpand)
@@ -366,13 +366,13 @@ class lobbyWindow(QtW.QMainWindow):
 
     def changeStatusPin(self, event):
         if(self.pinExpandInd): 
-            self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\expand.png").scaled(QtC.QSize(10, 10)))
+            self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/expand.png").scaled(QtC.QSize(10, 10)))
             self.pinExpandInd = False
             for x in self.pinContent:
                 x[0].hide()
                 x[1] = QtC.QRect(0, 0, 0, 0)
         else:
-            self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\collapse.png").scaled(QtC.QSize(10, 10)))
+            self.pinExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/collapse.png").scaled(QtC.QSize(10, 10)))
             self.pinExpandInd = True
             for x in self.pinContent:
                 x[0].show()
@@ -380,13 +380,13 @@ class lobbyWindow(QtW.QMainWindow):
     
     def changeStatusOther(self, event):
         if(self.otherExpandInd): 
-            self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\expand.png").scaled(QtC.QSize(10, 10)))
+            self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/expand.png").scaled(QtC.QSize(10, 10)))
             self.otherExpandInd = False
             for x in self.otherContent:
                 x[0].hide()
                 x[1] = QtC.QRect(0, 0, 0, 0)
         else:
-            self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\collapse.png").scaled(QtC.QSize(10, 10)))
+            self.otherExpand.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/collapse.png").scaled(QtC.QSize(10, 10)))
             self.otherExpandInd = True
             for x in self.otherContent:
                 x[0].show()
@@ -460,13 +460,13 @@ class lobbyWindow(QtW.QMainWindow):
             tempL = QtW.QLabel()
             tempL.setText(indexRoom.name)
             tempL.setFixedHeight(50)
-            tempLFont = QtG.QFont(QtG.QFontDatabase.applicationFontFamilies(QtG.QFontDatabase.addApplicationFont(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\Candal.ttf"))[0], 20, 0, False)
+            tempLFont = QtG.QFont(QtG.QFontDatabase.applicationFontFamilies(QtG.QFontDatabase.addApplicationFont(os.path.dirname(os.path.abspath(__file__)) + "/icon/Candal.ttf"))[0], 20, 0, False)
             tempL.setFont(tempLFont)
             tempL.setContentsMargins(10,0,10,0)
             tempL.setStyleSheet("background-color:#d2ffb0")
 
             tempB1 = QtW.QLabel()
-            tempB1.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\add-user.png").scaled(QtC.QSize(25, 25)))
+            tempB1.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/add-user.png").scaled(QtC.QSize(25, 25)))
             tempB1.setFixedSize(40,50)
             tempB1.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             tempB1.setContentsMargins(7,12,7,12)
@@ -474,7 +474,7 @@ class lobbyWindow(QtW.QMainWindow):
             tempB1.mousePressEvent = self.addParti
 
             tempB2 = QtW.QLabel()
-            tempB2.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\call.png").scaled(QtC.QSize(25, 25)))
+            tempB2.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/call.png").scaled(QtC.QSize(25, 25)))
             tempB2.setFixedSize(40,50)
             tempB2.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             tempB2.setContentsMargins(7,12,7,12)
@@ -483,7 +483,7 @@ class lobbyWindow(QtW.QMainWindow):
 
             
             tempB3 = QtW.QLabel()
-            tempB3.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\info.png").scaled(QtC.QSize(25, 25)))
+            tempB3.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/info.png").scaled(QtC.QSize(25, 25)))
             tempB3.setFixedSize(40,50)
             tempB3.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             tempB3.setContentsMargins(7,12,7,12)
@@ -510,11 +510,11 @@ class lobbyWindow(QtW.QMainWindow):
             noti = QtW.QLabel()
             demoPic = QtW.QLabel()
             if chatRoom == 0:
-                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\ghost.png").scaled(QtC.QSize(250, 250)))
+                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/ghost.png").scaled(QtC.QSize(250, 250)))
                 demoPic.setFixedSize(250,250)
                 noti.setText("Nothing here...")
             else:
-                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\sleep.png").scaled(QtC.QSize(250, 250)))
+                demoPic.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/sleep.png").scaled(QtC.QSize(250, 250)))
                 demoPic.setFixedSize(250,250)
                 noti.setText("Stop sleeping on it...")
             noti.setFixedHeight(30)
@@ -620,7 +620,7 @@ class lobbyWindow(QtW.QMainWindow):
             self.textContext.setContentsMargins(10,20,0,20)
             self.textContext.setFixedHeight(70)
             self.textContext.returnPressed.connect(lambda: self.addMessage())
-            self.sendButton.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\send.png").scaled(QtC.QSize(25, 25)))
+            self.sendButton.setPixmap(QtG.QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/send.png").scaled(QtC.QSize(25, 25)))
             self.sendButton.setFixedSize(50,70)
             self.sendButton.setAlignment(QtC.Qt.AlignmentFlag.AlignRight)
             self.sendButton.setContentsMargins(10,22,15,22)
