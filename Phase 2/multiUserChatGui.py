@@ -19,7 +19,6 @@ import pyaudio
 import struct
 import wave
 import socket
-from pydub.playback import play
 import showDevice
 
 host = socket.gethostbyname(socket.gethostname())
@@ -43,7 +42,7 @@ stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=Tr
 stream_music = audio.open(format=FORMAT, channels=2, rate=RATE, output=True, output_device_index=b)
 
 file_start_time = 0
-file_format = 0 # 0 for wav, 1 for mp3
+#file_format = 0 # 0 for wav, 1 for mp3
 music_dict = 'songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
@@ -89,7 +88,7 @@ class MultiUserChatWindow(QWidget):
         self.userid = userid
         self.record = False
         self.music = False
-        self.music_person = False
+        #self.music_person = False
         #self.playback = False
         self.firstInd = True
         self.updateMember()
@@ -241,7 +240,10 @@ class MultiUserChatWindow(QWidget):
         #recording button
         self.recordingButton = QLabel()
         self.recordingButton.setGeometry(0, 0, 0, 0)
+        #if not self.record:
         self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
+        #else:
+            #self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
         self.recordingButton.setFixedSize(100,100)
         self.recordingButton.mousePressEvent = self.RecordingButtonFunction
         self.recordingButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -318,7 +320,7 @@ class MultiUserChatWindow(QWidget):
     def MusicButtonFunction(self, event):
         self.music = not self.music
         if self.music:
-            self.music_person = True
+            #self.music_person = True
             #self.playback = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
             self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
@@ -473,16 +475,21 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         if self.record:
-            self.record = False
             #asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
             # suppose that user will not receive the stop after closing the windows
+            self.record = False
             for x in recording.keys():
                 recording[x].append(b'Stop')
-            global file_format
+            waves = self.writeHeader()
+            merge_thread = threading.Thread(target=self.merge)
+            merge_thread.start()
+            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+            write_thread.start()
+            '''global file_format
             if file_format == 1:
                 mp3_thread = threading.Thread(target=self.wavToMp3)
                 mp3_thread.start()
-                self.music = not self.music
+                self.music = not self.music'''
 
         if self.music:
             self.music = False
@@ -511,20 +518,21 @@ class MultiUserChatWindow(QWidget):
                         if not self.record:
                             self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
                             self.record = True
+                    elif data[4:] == b'Stop':
+                        if self.record:
+                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
+                            self.record = False
+                            for x in recording.keys():
+                                recording[x].append(b'Stop')
                             waves = self.writeHeader()
                             merge_thread = threading.Thread(target=self.merge)
                             merge_thread.start()
                             write_thread = threading.Thread(target=self.writeFile, args=(waves,))
                             write_thread.start()
-                    elif data[4:] == b'Stop':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
-                        self.record = False
-                        for x in recording.keys():
-                            recording[x].append(b'Stop')
-                        global file_format
+                        '''global file_format
                         if file_format == 1:
                             mp3_thread = threading.Thread(target=self.wavToMp3)
-                            mp3_thread.start()
+                            mp3_thread.start()'''
                     else:
                         global stream_music
                         if data[4:] == b'music':
