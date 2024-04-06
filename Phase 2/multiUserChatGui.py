@@ -557,8 +557,8 @@ class MultiUserChatWindow(QWidget):
                 self.music_person = False
                 self.playback = False
                 asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))'''
-            global stream_music
-            stream_music.close()
+            #global stream_music
+            #stream_music.close()
 
     def listen(self, userid, roomid, x):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
@@ -623,15 +623,15 @@ class MultiUserChatWindow(QWidget):
                                 mp3_thread = threading.Thread(target=self.wavToMp3)
                                 mp3_thread.start()'''
                         else:
-                            global stream_music
+                            #global stream_music
                             if data[4:] == b'music':
                                 self.music = False
-                                stream_music.close()
+                                #stream_music.close()
                             else:
                                 global audio
                                 self.music = True
                                 self.mp3ToWav(data[4:])
-                                stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
+                                #stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
                                 play_music_thread = threading.Thread(target=self.playMusic)
                                 play_music_thread.start()
                 else:
@@ -685,8 +685,8 @@ class MultiUserChatWindow(QWidget):
         data = audio_file.readframes(CHUNK)
         while self.music:
             try:
-                data = audio_file.readframes(CHUNK)
                 stream_music.write(data)
+                data = audio_file.readframes(CHUNK)
                 #recording['music'].append(data)
             except:
                 break
