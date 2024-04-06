@@ -336,8 +336,22 @@ class MultiUserChatWindow(QWidget):
         self.record = not self.record
         if self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
+            waves = self.writeHeader()
+            merge_thread = threading.Thread(target=self.merge)
+            merge_thread.start()
+            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+            write_thread.start()
         if recording and not self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
+            self.record = False
+            for x in recording.keys():
+                recording[x].append(b'Stop')
+            global file_format
+            if file_format == 1:
+                mp3_thread = threading.Thread(target=self.wavToMp3)
+                mp3_thread.start()
     
     def VoiceChangeButtonFunction(self, event):
         self.voiceChange = not self.voiceChange
