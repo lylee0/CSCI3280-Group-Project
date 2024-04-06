@@ -38,8 +38,8 @@ a, temp222 = showDevice.getDeviceList()
 b, temp333 = showDevice.getOutputDeviceList()
 
 audio = pyaudio.PyAudio()
-stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
+stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=a)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=b)
 
 file_start_time = 0
 file_format = 0 # 0 for wav, 1 for mp3
