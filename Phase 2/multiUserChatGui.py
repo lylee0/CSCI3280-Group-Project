@@ -240,10 +240,10 @@ class MultiUserChatWindow(QWidget):
         #recording button
         self.recordingButton = QLabel()
         self.recordingButton.setGeometry(0, 0, 0, 0)
-        #if not self.record:
-        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
-        #else:
-            #self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
+        if not self.record:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
+        else:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
         self.recordingButton.setFixedSize(100,100)
         self.recordingButton.mousePressEvent = self.RecordingButtonFunction
         self.recordingButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
