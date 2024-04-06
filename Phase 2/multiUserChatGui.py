@@ -237,7 +237,10 @@ class MultiUserChatWindow(QWidget):
         #chat room button
         self.chatRoomButton = QLabel()
         self.chatRoomButton.setGeometry(0, 0, 0, 0)
-        self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/chatroom.png").scaled(QSize(50, 50)))
+        if (self.share):
+            self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/sharing.png").scaled(QSize(50, 50)))
+        else:
+            self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/share.png").scaled(QSize(50, 50)))
         self.chatRoomButton.setFixedSize(100,100)
         self.chatRoomButton.mousePressEvent = self.ChatRoomButtonFunction
         self.chatRoomButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -331,6 +334,7 @@ class MultiUserChatWindow(QWidget):
         if self.share and not self.video:
             self.share = False
             self.videoStartInd = True
+            self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/share.png").scaled(QSize(50, 50)))
         self.video = not self.video
         if (self.video):
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
@@ -348,6 +352,10 @@ class MultiUserChatWindow(QWidget):
             self.video = False
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
         self.share = not self.share
+        if (self.share):
+            self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/sharing.png").scaled(QSize(50, 50)))
+        else:
+            self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/share.png").scaled(QSize(50, 50)))
     
     def MusicButtonFunction(self, event):
         self.music = not self.music
