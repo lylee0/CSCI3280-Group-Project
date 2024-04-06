@@ -10,14 +10,14 @@ nest_asyncio.apply()
 CONNECTIONS = []
 otherServer = []
 
-with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
     json_object = json.load(openfile)
 
 #No one in the network and voice room initially
 json_object["User"] = []
 json_object["VoiceRoom"] = {}
 
-with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
     updatefile.write(json.dumps(json_object))
 
 async def updateServer(uri, content):
@@ -52,11 +52,11 @@ async def echo(websocket, path):
                 message.pop(0)
 
             if message[0] == "Get":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile) 
                 if message[1] not in json_object["User"]:      
                     json_object["User"].append(message[1])
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
                 await websocket.send(json.dumps(json_object))
 
@@ -66,7 +66,7 @@ async def echo(websocket, path):
                         otherServer.append(message[x])
 
             if message[0] == "Update":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile)       
                 idTEMP = int(message[1])
                 method = message[2]
@@ -90,7 +90,7 @@ async def echo(websocket, path):
                         json_object["chatRoom"][pos]["pinnedBy"].remove(content)
                     except Exception as e:
                         print(e)
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))  
                 try:
                     await websocket.send(json.dumps(json_object))
@@ -99,7 +99,7 @@ async def echo(websocket, path):
                     await websocket.send("error")
 
             if message[0] == "NewRoom":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile)
                 idTEMP = int(message[1])
                 if len([x for x in json_object["chatRoom"] if x["id"] == idTEMP]) != 0:
@@ -115,19 +115,19 @@ async def echo(websocket, path):
                     "conv" : [],
                     "parti" : [user]
                 })
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
                 await websocket.send(json.dumps(json_object))
             
             if message[0] == "Read":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile)
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
                 await websocket.send(json.dumps(json_object))
             
             if message[0] == "VoiceAdd":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile)
                 room = message[1]
                 username = message[2]
@@ -135,11 +135,11 @@ async def echo(websocket, path):
                     json_object["VoiceRoom"][room] = [username]
                 else:
                     json_object["VoiceRoom"][room].append(username)
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
 
             if message[0] == "VoiceRemove":
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'r') as openfile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'r') as openfile:
                     json_object = json.load(openfile)
                 room = message[1]
                 username = message[2]
@@ -147,9 +147,9 @@ async def echo(websocket, path):
                     continue
                 else:
                     json_object["VoiceRoom"][room].remove(username)
-                with open(os.path.dirname(os.path.abspath(__file__)) + '\\data\\data.json', 'w') as updatefile:
+                with open(os.path.dirname(os.path.abspath(__file__)) + '/data/data.json', 'w') as updatefile:
                     updatefile.write(json.dumps(json_object))
 
 
-asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765, ping_interval=None))
+asyncio.get_event_loop().run_until_complete(websockets.serve(echo, socket.gethostbyname(socket.gethostname()), 8765, ping_interval=1))
 asyncio.get_event_loop().run_forever() 

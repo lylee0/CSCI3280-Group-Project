@@ -19,8 +19,9 @@ import pyaudio
 import struct
 import wave
 import socket
-from pydub.playback import play
 import showDevice
+import cv2
+import numpy as np
 
 host = socket.gethostbyname(socket.gethostname())
 
@@ -28,20 +29,24 @@ uri = 'ws://'+ host +':8765'
 
 otherHost = []
 userInRoom = []
+indexMember = []
 
 FORMAT = pyaudio.paInt16
 CHANNEL = 1
 RATE = 44100
 CHUNK = 1024
 SAMPLEWIDTH = 2
+a, temp222 = showDevice.getDeviceList()
+b, temp333 = showDevice.getOutputDeviceList()
 
 audio = pyaudio.PyAudio()
-stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=1)
-stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=4)
+stream_input = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK, input_device_index=a)
+stream_output = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, output=True, frames_per_buffer=CHUNK, output_device_index=b)
+stream_music = audio.open(format=FORMAT, channels=2, rate=RATE, output=True, output_device_index=b)
 
 file_start_time = 0
-file_format = 0 # 0 for wav, 1 for mp3
-music_dict = 'Phase 2\\songs'
+#file_format = 0 # 0 for wav, 1 for mp3
+music_dict = 'songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
 recording = {}
@@ -74,7 +79,10 @@ class MultiUserChatWindow(QWidget):
         self.online=True
         self.mute = False
         self.video = False
+        self.videoStartInd = True
+        self.cam = None
         self.voiceChange = False
+        self.memberCollection = {}
         otherHost = otherHost2
         music_path = os.listdir(os.path.abspath(os.path.join(os.getcwd(), music_dict)))[0]
         music_path = f"./songs/{music_path}"
@@ -86,10 +94,12 @@ class MultiUserChatWindow(QWidget):
         self.userid = userid
         self.record = False
         self.music = False
-        self.music_person = False
+        #self.music_person = False
         #self.playback = False
         self.firstInd = True
         self.updateMember()
+        getCamThread = threading.Thread(target=self.getCam,args=())
+        getCamThread.start()
         self.timer = QtC.QTimer()
         self.timer.timeout.connect(self.getRefresh)
         self.timer.start(1000)
@@ -122,6 +132,7 @@ class MultiUserChatWindow(QWidget):
         memberWidget = QWidget()
         memberWidget.setStyleSheet("background-color : blue;")
         memberLayout = QGridLayout()
+        self.memberCollection = {}
 
         for x in userInRoom:
             memberLayout.addWidget(self.MemberUI(x), int((userInRoom.index(x)-1)/3), int((userInRoom.index(x)-1)%3))
@@ -162,6 +173,18 @@ class MultiUserChatWindow(QWidget):
         self.outputDeivceDropdown.setCurrentIndex(outputDeviceID - len(inputDevices))
         deviceLayout.addWidget(self.outputDeivceDropdown)
 
+        #camera device
+        self.cameraDropdown = QComboBox()
+        self.cameraDropdown.setFixedWidth(200)
+        self.cameraDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
+
+        camera = showDevice.getCameraList()
+        for x in camera:
+            self.cameraDropdown.addItem(x)
+
+        self.cameraDropdown.setCurrentIndex(0)
+        deviceLayout.addWidget(self.cameraDropdown)
+
         functionBarLayout.addLayout(deviceLayout)
 
 
@@ -170,9 +193,9 @@ class MultiUserChatWindow(QWidget):
         self.muteButton = QLabel()
         self.muteButton.setGeometry(0, 0, 0, 0)
         if not self.mute:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(50, 50)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/microphone.png").scaled(QSize(50, 50)))
         else:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(50, 50)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/mute.png").scaled(QSize(50, 50)))
         self.muteButton.setFixedSize(100,100)
         self.muteButton.mousePressEvent = self.MuteButtonFunction
         self.muteButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -185,9 +208,9 @@ class MultiUserChatWindow(QWidget):
         self.videoButton = QLabel()
         self.videoButton.setGeometry(0, 0, 0, 0)
         if not self.video:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(50, 50)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
         else:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(50, 50)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
         self.videoButton.setFixedSize(100,100)
         self.videoButton.mousePressEvent = self.VideoButtonFunction
         self.videoButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -199,7 +222,7 @@ class MultiUserChatWindow(QWidget):
         #member list button
         self.memberListButton = QLabel()
         self.memberListButton.setGeometry(0, 0, 0, 0)
-        self.memberListButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\memberlist.png").scaled(QSize(50, 50)))
+        self.memberListButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/memberlist.png").scaled(QSize(50, 50)))
         self.memberListButton.setFixedSize(100,100)
         self.memberListButton.mousePressEvent = self.MemberListButtonFunction
         self.memberListButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -211,7 +234,7 @@ class MultiUserChatWindow(QWidget):
         #chat room button
         self.chatRoomButton = QLabel()
         self.chatRoomButton.setGeometry(0, 0, 0, 0)
-        self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\chatroom.png").scaled(QSize(50, 50)))
+        self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/chatroom.png").scaled(QSize(50, 50)))
         self.chatRoomButton.setFixedSize(100,100)
         self.chatRoomButton.mousePressEvent = self.ChatRoomButtonFunction
         self.chatRoomButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -224,9 +247,9 @@ class MultiUserChatWindow(QWidget):
         self.musicButton = QLabel()
         self.musicButton.setGeometry(0, 0, 0, 0)
         if not self.music:
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_off.png").scaled(QSize(50, 50)))
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
         else:
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_on.png").scaled(QSize(50, 50)))
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_on.png").scaled(QSize(50, 50)))
         self.musicButton.setFixedSize(100,100)
         self.musicButton.mousePressEvent = self.MusicButtonFunction
         self.musicButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -238,7 +261,10 @@ class MultiUserChatWindow(QWidget):
         #recording button
         self.recordingButton = QLabel()
         self.recordingButton.setGeometry(0, 0, 0, 0)
-        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
+        if not self.record:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
+        else:
+            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
         self.recordingButton.setFixedSize(100,100)
         self.recordingButton.mousePressEvent = self.RecordingButtonFunction
         self.recordingButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -251,9 +277,9 @@ class MultiUserChatWindow(QWidget):
         self.voiceChangeButton = QLabel()
         self.voiceChangeButton.setGeometry(0, 0, 0, 0)
         if not self.voiceChange:
-            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_off.png").scaled(QSize(50, 50)))
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_off.png").scaled(QSize(50, 50)))
         else:
-            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_on.png").scaled(QSize(50, 50)))
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_on.png").scaled(QSize(50, 50)))
         self.videoButton.setFixedSize(100,100)
         self.voiceChangeButton.mousePressEvent = self.VoiceChangeButtonFunction
         self.voiceChangeButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -265,7 +291,7 @@ class MultiUserChatWindow(QWidget):
         #end chat button
         self.endChatButton = QLabel()
         self.endChatButton.setGeometry(0, 0, 0, 0)
-        self.endChatButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\end_chat.png").scaled(QSize(50, 50)))
+        self.endChatButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/end_chat.png").scaled(QSize(50, 50)))
         self.endChatButton.setFixedSize(100,100)
         self.endChatButton.mousePressEvent = self.EndChatButtonFunction
         self.endChatButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -281,6 +307,8 @@ class MultiUserChatWindow(QWidget):
         memberUI.setText(name)
         memberUI.setAlignment(QtC.Qt.AlignmentFlag.AlignCenter)
         memberUI.setStyleSheet("background-color : red; color : blue;")
+        id = indexMember.index(name)
+        self.memberCollection[id] = memberUI
 
         return memberUI
     
@@ -291,17 +319,17 @@ class MultiUserChatWindow(QWidget):
     def MuteButtonFunction(self, event):
         self.mute = not self.mute
         if (self.mute):
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\mute.png").scaled(QSize(50, 50)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/mute.png").scaled(QSize(50, 50)))
         else:
-            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\microphone.png").scaled(QSize(50, 50)))
+            self.muteButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/microphone.png").scaled(QSize(50, 50)))
 
 
     def VideoButtonFunction(self, event):
         self.video = not self.video
         if (self.video):
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_video.png").scaled(QSize(50, 50)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
         else:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\video.png").scaled(QSize(50, 50)))
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
 
     def MemberListButtonFunction(self, event):
         
@@ -315,13 +343,13 @@ class MultiUserChatWindow(QWidget):
     def MusicButtonFunction(self, event):
         self.music = not self.music
         if self.music:
-            self.music_person = True
+            #self.music_person = True
             #self.playback = True
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_off.png").scaled(QSize(50, 50)))
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\karaoke_on.png").scaled(QSize(50, 50)))
+            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_on.png").scaled(QSize(50, 50)))
         #return
 
     async def send_signal(self, message):
@@ -333,18 +361,18 @@ class MultiUserChatWindow(QWidget):
     def RecordingButtonFunction(self, event):
         # after clicking stop, need to wait for write file thread to finish, then users can click start again
         global recording, merge_thread, write_thread
-        self.record = not self.record
-        if self.record:
+        #self.record = not self.record
+        if not self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
-        if recording and not self.record:
+        if recording and self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
     def VoiceChangeButtonFunction(self, event):
         self.voiceChange = not self.voiceChange
         if not self.voiceChange:
-            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_off.png").scaled(QSize(50, 50)))
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_off.png").scaled(QSize(50, 50)))
         else:
-            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\voice_change_on.png").scaled(QSize(50, 50)))
+            self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_on.png").scaled(QSize(50, 50)))
 
     def EndChatButtonFunction(self, event):
         self.close()
@@ -370,9 +398,10 @@ class MultiUserChatWindow(QWidget):
         data = asyncio.get_event_loop().run_until_complete(self.sendRead(uri))
         try:
             data = json.loads(data)
-            global userInRoom
+            global userInRoom, indexMember
             temp = userInRoom
             userInRoom = data["VoiceRoom"][str(self.room)]
+            indexMember = [x["parti"] for x in data["chatRoom"] if x["id"] == self.room][0]
             if temp != userInRoom:
                 if self.firstInd:
                     userid = self.userid
@@ -402,6 +431,42 @@ class MultiUserChatWindow(QWidget):
                 childrenLayout.widget().deleteLater()
             else:
                 self.removeLayout(childrenLayout)
+
+    def getCam(self):
+        while self.online:
+            if self.video:
+                if self.videoStartInd:
+                    try:
+                        self.cam = cv2.VideoCapture(self.cameraDropdown.currentIndex(), cv2.CAP_DSHOW)
+                        self.videoStartInd = False
+                    except:
+                        self.video = False
+                        self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
+                        fail = QtW.QMessageBox()
+                        fail.setIcon(QtW.QMessageBox.Critical)
+                        fail.setText("Cannot detect camera")
+                        fail.exec_()
+                else: 
+                    ret, frame = self.cam.read()
+                    shape = frame.shape
+                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + frame.tobytes()
+                    loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
+                    asyncio.set_event_loop(loop)
+            else:
+                if not self.videoStartInd:
+                    self.videoStartInd = True
+                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid)
+                    loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
+                    asyncio.set_event_loop(loop)
+                if self.cam != None:
+                    if self.cam.isOpened():
+                        self.cam.release()
+            time.sleep(0.003)
+    
+    async def videoInfo(self, info):
+        async with websockets.connect(uri, max_size=2**30) as websocket:
+            await websocket.send(info)
+            await websocket.close()
 
     async def removeParti(self):
         async with websockets.connect(uri, max_size=2**30) as websocket:
@@ -438,7 +503,7 @@ class MultiUserChatWindow(QWidget):
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
         if not os.path.exists(path):
             os.makedirs(path)
-        output = path + f"\\audio_{time}.wav"
+        output = path + f"/audio_{time}.wav"
         waves =  wave.open(output, 'wb')
         waves.setnchannels(CHANNEL)
         waves.setsampwidth(SAMPLEWIDTH)
@@ -470,16 +535,21 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         if self.record:
-            self.record = False
             #asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
             # suppose that user will not receive the stop after closing the windows
+            self.record = False
             for x in recording.keys():
                 recording[x].append(b'Stop')
-            global file_format
+            waves = self.writeHeader()
+            merge_thread = threading.Thread(target=self.merge)
+            merge_thread.start()
+            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+            write_thread.start()
+            '''global file_format
             if file_format == 1:
                 mp3_thread = threading.Thread(target=self.wavToMp3)
                 mp3_thread.start()
-                self.music = not self.music
+                self.music = not self.music'''
 
         if self.music:
             self.music = False
@@ -494,6 +564,18 @@ class MultiUserChatWindow(QWidget):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
         asyncio.set_event_loop(loop)
 
+    def display(self, qImg, info, h, w, d):
+        hDiff = qImg.height()/h
+        wDiff = qImg.width()/w
+        factor = min(hDiff,wDiff)
+        qImg.setPixmap(QPixmap.fromImage(QtG.QImage(info, w, h, w*d, QtG.QImage.Format_RGB888).rgbSwapped()).scaled(int(w*factor), int(h*factor)))
+
+    def clear(self, qImg, userId):
+        qImg.clear()
+        qImg.setText(indexMember[userId])
+        qImg.setStyleSheet("background-color : red; color : blue;")
+
+    
     async def receiveAudio(self, userid, roomid, x):
         global recording
         async with websockets.connect("ws://" + x + ":8765", max_size=2**30) as websocket:
@@ -504,35 +586,54 @@ class MultiUserChatWindow(QWidget):
                 user = struct.unpack('>h', user)[0]
                 if user == 32767:
                     global merge_thread, write_thread
-                    if data[4:] == b'Start':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
-                        self.record = True
-                        waves = self.writeHeader()
-                        merge_thread = threading.Thread(target=self.merge)
-                        merge_thread.start()
-                        write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-                        write_thread.start()
-                    elif data[4:] == b'Stop':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
-                        self.record = False
-                        for x in recording.keys():
-                            recording[x].append(b'Stop')
-                        global file_format
-                        if file_format == 1:
-                            mp3_thread = threading.Thread(target=self.wavToMp3)
-                            mp3_thread.start()
-                    else:
-                        global stream_music
-                        if data[4:] == b'music':
-                            self.music = False
-                            stream_music.close()
+                    if struct.unpack('>h', data[2:4])[0] == 32767:
+                        if struct.unpack('>h', data[4:6])[0] == 32767:
+                            userId = struct.unpack('>h', data[6:8])[0]
+                            changeImage = self.memberCollection[userId]
+                            clearThread = threading.Thread(target=self.clear, args=(changeImage, userId))
+                            clearThread.start()
                         else:
-                            global audio
-                            self.music = True
-                            info = self.mp3ToWav(data[4:])
-                            stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
-                            play_music_thread = threading.Thread(target=self.playMusic)
-                            play_music_thread.start()
+                            userId = struct.unpack('>h', data[4:6])[0]
+                            changeImage = self.memberCollection[userId]
+                            changeImage.setStyleSheet("")
+                            info = data[12:]
+                            h = struct.unpack('>h', data[6:8])[0]
+                            w = struct.unpack('>h', data[8:10])[0]
+                            d = struct.unpack('>h', data[10:12])[0]
+                            displayThread = threading.Thread(target=self.display, args=(changeImage, info, h, w, d))
+                            displayThread.start()
+                    else:
+                        if data[4:] == b'Start':
+                            if not self.record:
+                                self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/recording.png").scaled(QSize(50, 50)))
+                                self.record = True
+                        elif data[4:] == b'Stop':
+                            if self.record:
+                                self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_recording.png").scaled(QSize(50, 50)))
+                                self.record = False
+                                for x in recording.keys():
+                                    recording[x].append(b'Stop')
+                                waves = self.writeHeader()
+                                merge_thread = threading.Thread(target=self.merge)
+                                merge_thread.start()
+                                write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+                                write_thread.start()
+                            '''global file_format
+                            if file_format == 1:
+                                mp3_thread = threading.Thread(target=self.wavToMp3)
+                                mp3_thread.start()'''
+                        else:
+                            global stream_music
+                            if data[4:] == b'music':
+                                self.music = False
+                                stream_music.close()
+                            else:
+                                global audio
+                                self.music = True
+                                self.mp3ToWav(data[4:])
+                                #stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
+                                play_music_thread = threading.Thread(target=self.playMusic)
+                                play_music_thread.start()
                 else:
                     room = data[2:4]
                     room = struct.unpack('>h', room)[0]
@@ -570,10 +671,10 @@ class MultiUserChatWindow(QWidget):
         audio_file.export("temp.wav", format="wav")
         os.remove("temp.mp3")
         audio_file = wave.open("temp.wav", 'rb')
-        global audio
-        info = [audio.get_format_from_width(audio_file.getsampwidth()), audio_file.getnchannels(), audio_file.getframerate()]
-        audio_file.close()
-        return info
+        #global audio
+        #info = [audio.get_format_from_width(audio_file.getsampwidth()), audio_file.getnchannels(), audio_file.getframerate()]
+        #audio_file.close()
+        #return info
 
     def playMusic(self):
         # please implement a button for start and stop

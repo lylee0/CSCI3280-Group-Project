@@ -1,5 +1,7 @@
 import pyaudio
+import pygrabber.dshow_graph
 import sounddevice as sd
+import pygrabber
 
 def getDeviceList():
 
@@ -35,6 +37,11 @@ def getOutputDeviceList():
     print(returnList)
     return current_output_id, returnList
 
+def getCameraList() :
+    
+    return pygrabber.dshow_graph.FilterGraph().get_input_devices()
+
 if __name__ == "__main__":
     getDeviceList()
     getOutputDeviceList()
+    getCameraList()
