@@ -22,6 +22,8 @@ import socket
 import showDevice
 import cv2
 import numpy as np
+from PIL import ImageGrab
+
 
 host = socket.gethostbyname(socket.gethostname())
 
@@ -82,6 +84,7 @@ class MultiUserChatWindow(QWidget):
         self.videoStartInd = True
         self.cam = None
         self.voiceChange = False
+        self.share = False
         self.memberCollection = {}
         otherHost = otherHost2
         music_path = os.listdir(os.path.abspath(os.path.join(os.getcwd(), music_dict)))[0]
@@ -325,6 +328,9 @@ class MultiUserChatWindow(QWidget):
 
 
     def VideoButtonFunction(self, event):
+        if self.share and not self.video:
+            self.share = False
+            self.videoStartInd = True
         self.video = not self.video
         if (self.video):
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
@@ -338,7 +344,10 @@ class MultiUserChatWindow(QWidget):
         self.memberListPopUp.show()
     
     def ChatRoomButtonFunction(self, event):
-        return
+        if self.video and not self.share:
+            self.video = False
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
+        self.share = not self.share
     
     def MusicButtonFunction(self, event):
         self.music = not self.music
@@ -448,6 +457,15 @@ class MultiUserChatWindow(QWidget):
                         fail.exec_()
                 else: 
                     ret, frame = self.cam.read()
+                    shape = frame.shape
+                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + frame.tobytes()
+                    loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
+                    asyncio.set_event_loop(loop)
+            elif self.share:
+                if self.videoStartInd:
+                    self.videoStartInd = False
+                else:
+                    frame = np.array(ImageGrab.grab())
                     shape = frame.shape
                     info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + frame.tobytes()
                     loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
