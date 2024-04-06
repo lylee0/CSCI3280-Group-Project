@@ -505,13 +505,14 @@ class MultiUserChatWindow(QWidget):
                 if user == 32767:
                     global merge_thread, write_thread
                     if data[4:] == b'Start':
-                        self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
-                        self.record = True
-                        waves = self.writeHeader()
-                        merge_thread = threading.Thread(target=self.merge)
-                        merge_thread.start()
-                        write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-                        write_thread.start()
+                        if not self.record:
+                            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
+                            self.record = True
+                            waves = self.writeHeader()
+                            merge_thread = threading.Thread(target=self.merge)
+                            merge_thread.start()
+                            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
+                            write_thread.start()
                     elif data[4:] == b'Stop':
                         self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
                         self.record = False
