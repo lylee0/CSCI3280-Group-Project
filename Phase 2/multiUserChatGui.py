@@ -631,7 +631,7 @@ class MultiUserChatWindow(QWidget):
                                 global audio
                                 self.music = True
                                 self.mp3ToWav(data[4:])
-                                #stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
+                                stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
                                 play_music_thread = threading.Thread(target=self.playMusic)
                                 play_music_thread.start()
                 else:
