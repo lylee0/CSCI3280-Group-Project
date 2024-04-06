@@ -333,25 +333,11 @@ class MultiUserChatWindow(QWidget):
     def RecordingButtonFunction(self, event):
         # after clicking stop, need to wait for write file thread to finish, then users can click start again
         global recording, merge_thread, write_thread
-        self.record = not self.record
-        if self.record:
+        #self.record = not self.record
+        if not self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Start'))
-            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\recording.png").scaled(QSize(50, 50)))
-            waves = self.writeHeader()
-            merge_thread = threading.Thread(target=self.merge)
-            merge_thread.start()
-            write_thread = threading.Thread(target=self.writeFile, args=(waves,))
-            write_thread.start()
-        if recording and not self.record:
+        if recording and self.record:
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
-            self.recordingButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "\\icon\\no_recording.png").scaled(QSize(50, 50)))
-            self.record = False
-            for x in recording.keys():
-                recording[x].append(b'Stop')
-            global file_format
-            if file_format == 1:
-                mp3_thread = threading.Thread(target=self.wavToMp3)
-                mp3_thread.start()
     
     def VoiceChangeButtonFunction(self, event):
         self.voiceChange = not self.voiceChange
