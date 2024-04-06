@@ -461,7 +461,7 @@ class MultiUserChatWindow(QWidget):
                 if self.cam != None:
                     if self.cam.isOpened():
                         self.cam.release()
-            time.sleep(0.003)
+            time.sleep(0.03)
     
     async def videoInfo(self, info):
         async with websockets.connect(uri, max_size=2**30) as websocket:
