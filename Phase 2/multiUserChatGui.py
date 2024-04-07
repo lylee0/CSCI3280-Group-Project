@@ -367,11 +367,6 @@ class MultiUserChatWindow(QWidget):
         if self.music:
             #self.music_person = True
             #self.playback = True
-            asyncio.new_event_loop().run_until_complete(self.sendMusic())
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
-        else:
-            #asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
-
             self.music_choose_pop_up = QWidget()
             self.music_choose_pop_up.setWindowTitle("Choose Music")
             #self.music_choose_pop_up.setFixedSize(700, 500)
@@ -393,15 +388,17 @@ class MultiUserChatWindow(QWidget):
             self.music_choose_pop_up.setLayout(layout)
 
             self.music_choose_pop_up.show()
-
-            self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_on.png").scaled(QSize(50, 50)))
+            
+        else:
+            asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
         #return
 
     def MusicPathFunction(self, music_name, event):
         global music_path
         music_path = music_path = f"./songs/{music_name}"
         print(f"music path: {music_path}")
-        asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+        asyncio.new_event_loop().run_until_complete(self.sendMusic())
+        #asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
         self.music_choose_pop_up.close()
 
     async def send_signal(self, message):
