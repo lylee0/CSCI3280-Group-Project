@@ -652,10 +652,12 @@ class MultiUserChatWindow(QWidget):
                             #global stream_music
                             if data[4:] == b'music':
                                 self.music = False
+                                self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
                                 #stream_music.close()
                             else:
                                 global audio
                                 self.music = True
+                                self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_on.png").scaled(QSize(50, 50)))
                                 self.mp3ToWav(data[4:])
                                 #stream_music = audio.open(format=info[0], channels=info[1], rate=info[2], output=True, output_device_index=4)
                                 play_music_thread = threading.Thread(target=self.playMusic)
@@ -696,7 +698,7 @@ class MultiUserChatWindow(QWidget):
         audio_file = AudioSegment.from_mp3("temp.mp3")
         audio_file.export("temp.wav", format="wav")
         os.remove("temp.mp3")
-        audio_file = wave.open("temp.wav", 'rb')
+        #audio_file = wave.open("temp.wav", 'rb')
         #global audio
         #info = [audio.get_format_from_width(audio_file.getsampwidth()), audio_file.getnchannels(), audio_file.getframerate()]
         #audio_file.close()
