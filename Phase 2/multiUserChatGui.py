@@ -23,6 +23,7 @@ import showDevice
 import cv2
 import numpy as np
 from PIL import ImageGrab
+import mediapipe
 
 
 host = socket.gethostbyname(socket.gethostname())
@@ -465,6 +466,24 @@ class MultiUserChatWindow(QWidget):
                         fail.exec_()
                 else: 
                     ret, frame = self.cam.read()
+
+                    #virtual background
+                    bg_img = cv2.imread("bg.jpg")
+                    bg_img = cv2.resize(bg_img, (frame.shape[1], frame.shape[0]))
+
+                    mp_selfie_segmentation = mediapipe.solutions.selfie_segmentation
+                    selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation()
+                    result = selfie_segmentation.process(frame)
+                    segmentation_mask = result.segmentation_mask
+
+                    threshold = 0.1
+                    condition = np.stack((segmentation_mask, ) * 3, axis = -1) > threshold
+                    frame = np.where(condition, frame[:, :, ::-1], bg_img[:, :, ::-1])
+
+
+
+
+
                     shape = frame.shape
                     info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + struct.pack('>h', 0) + frame.tobytes()
                     loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
