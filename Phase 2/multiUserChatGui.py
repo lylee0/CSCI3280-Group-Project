@@ -466,7 +466,7 @@ class MultiUserChatWindow(QWidget):
                 else: 
                     ret, frame = self.cam.read()
                     shape = frame.shape
-                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + frame.tobytes()
+                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + struct.pack('>h', 0) + frame.tobytes()
                     loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
                     asyncio.set_event_loop(loop)
             elif self.share:
@@ -475,7 +475,7 @@ class MultiUserChatWindow(QWidget):
                 else:
                     frame = np.array(ImageGrab.grab())
                     shape = frame.shape
-                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + frame.tobytes()
+                    info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + struct.pack('>h', 1) + frame.tobytes()
                     loop = asyncio.new_event_loop().run_until_complete(self.videoInfo(info))
                     asyncio.set_event_loop(loop)
             else:
@@ -590,11 +590,14 @@ class MultiUserChatWindow(QWidget):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
         asyncio.set_event_loop(loop)
 
-    def display(self, qImg, info, h, w, d):
+    def display(self, qImg, info, h, w, d, camInd):
         hDiff = qImg.height()/h
         wDiff = qImg.width()/w
         factor = min(hDiff,wDiff)
-        qImg.setPixmap(QPixmap.fromImage(QtG.QImage(info, w, h, w*d, QtG.QImage.Format_RGB888).rgbSwapped()).scaled(int(w*factor), int(h*factor)))
+        if camInd == 0:
+            qImg.setPixmap(QPixmap.fromImage(QtG.QImage(info, w, h, w*d, QtG.QImage.Format_RGB888).rgbSwapped()).scaled(int(w*factor), int(h*factor)))
+        else:
+            qImg.setPixmap(QPixmap.fromImage(QtG.QImage(info, w, h, w*d, QtG.QImage.Format_RGB888)).scaled(int(w*factor), int(h*factor)))
 
     def clear(self, qImg, userId):
         qImg.clear()
@@ -622,11 +625,12 @@ class MultiUserChatWindow(QWidget):
                             userId = struct.unpack('>h', data[4:6])[0]
                             changeImage = self.memberCollection[userId]
                             changeImage.setStyleSheet("")
-                            info = data[12:]
+                            info = data[14:]
                             h = struct.unpack('>h', data[6:8])[0]
                             w = struct.unpack('>h', data[8:10])[0]
                             d = struct.unpack('>h', data[10:12])[0]
-                            displayThread = threading.Thread(target=self.display, args=(changeImage, info, h, w, d))
+                            camInd = struct.unpack('>h', data[12:14])[0]
+                            displayThread = threading.Thread(target=self.display, args=(changeImage, info, h, w, d, camInd))
                             displayThread.start()
                     else:
                         if data[4:] == b'Start':
