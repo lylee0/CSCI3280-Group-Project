@@ -391,14 +391,12 @@ class MultiUserChatWindow(QWidget):
             
         else:
             asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
-        #return
 
     def MusicPathFunction(self, music_name, event):
         global music_path
         music_path = music_path = f"./songs/{music_name}"
         print(f"music path: {music_path}")
         asyncio.new_event_loop().run_until_complete(self.sendMusic())
-        #asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
         self.music_choose_pop_up.close()
 
     async def send_signal(self, message):
