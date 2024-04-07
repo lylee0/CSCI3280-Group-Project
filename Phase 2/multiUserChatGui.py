@@ -572,7 +572,7 @@ class MultiUserChatWindow(QWidget):
                     continue
     
     def writeHeader(self):
-        global userInRoom, mergeRecording, output
+        global output
         time = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
         if not os.path.exists(path):
