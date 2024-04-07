@@ -24,6 +24,7 @@ import cv2
 import numpy as np
 from PIL import ImageGrab
 import mediapipe
+from functools import partial
 
 
 host = socket.gethostbyname(socket.gethostname())
@@ -73,6 +74,9 @@ class MemberListPopUp(QWidget):
             layout.addWidget(nameLabel)
 
         self.setLayout(layout)
+
+
+
 
 class MultiUserChatWindow(QWidget):
     def __init__(self, userid, roomID, user, otherHost2):
@@ -366,9 +370,39 @@ class MultiUserChatWindow(QWidget):
             asyncio.new_event_loop().run_until_complete(self.sendMusic())
             self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_off.png").scaled(QSize(50, 50)))
         else:
-            asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+            #asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+
+            self.music_choose_pop_up = QWidget()
+            self.music_choose_pop_up.setWindowTitle("Choose Music")
+            #self.music_choose_pop_up.setFixedSize(700, 500)
+
+            layout = QVBoxLayout()
+            layout.setAlignment(Qt.AlignTop)
+
+            all_music = os.listdir(os.path.abspath(os.path.join(os.getcwd(), music_dict)))
+            all_music_name = [k for k in all_music if '.mp3' in k]
+
+            for music_name in all_music_name:
+                nameLabel = QLabel()
+                nameLabel.setText(music_name)
+                nameLabel.setStyleSheet("QLabel{font-size: 18pt;}")
+                nameLabel.mousePressEvent = partial(self.MusicPathFunction, music_name)
+                nameLabel.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
+                layout.addWidget(nameLabel)
+
+            self.music_choose_pop_up.setLayout(layout)
+
+            self.music_choose_pop_up.show()
+
             self.musicButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/karaoke_on.png").scaled(QSize(50, 50)))
         #return
+
+    def MusicPathFunction(self, music_name, event):
+        global music_path
+        music_path = music_path = f"./songs/{music_name}"
+        print(f"music path: {music_path}")
+        asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))
+        self.music_choose_pop_up.close()
 
     async def send_signal(self, message):
         async with websockets.connect(uri, max_size=2**30) as websocket:
