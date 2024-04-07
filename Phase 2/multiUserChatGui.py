@@ -468,7 +468,7 @@ class MultiUserChatWindow(QWidget):
                     ret, frame = self.cam.read()
 
                     #virtual background
-                    bg_img = cv2.imread("bg.jpg")
+                    bg_img = cv2.imread("./icon/bg.jpg")
                     bg_img = cv2.resize(bg_img, (frame.shape[1], frame.shape[0]))
 
                     mp_selfie_segmentation = mediapipe.solutions.selfie_segmentation
@@ -480,9 +480,9 @@ class MultiUserChatWindow(QWidget):
                     condition = np.stack((segmentation_mask, ) * 3, axis = -1) > threshold
                     frame = np.where(condition, frame[:, :, ::-1], bg_img[:, :, ::-1])
 
+                    frame = frame[:, :, ::-1]
 
-
-
+                    #end virtual background
 
                     shape = frame.shape
                     info = struct.pack('>h', 32767) + struct.pack('>h', 32767) + struct.pack('>h', self.userid) + struct.pack('>h', shape[0]) + struct.pack('>h', shape[1]) + struct.pack('>h', shape[2]) + struct.pack('>h', 0) + frame.tobytes()
