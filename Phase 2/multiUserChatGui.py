@@ -589,7 +589,6 @@ class MultiUserChatWindow(QWidget):
             if mergeRecording:
                 flag = mergeRecording.pop(0)
                 if flag == b'Stop':
-                    global recording
                     waves.close()
                     return
                 waves.writeframes(flag) 
@@ -609,8 +608,6 @@ class MultiUserChatWindow(QWidget):
         self.timer.stop()
         self.online = False
         if self.record:
-            #asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
-            # suppose that user will not receive the stop after closing the windows
             self.record = False
             for x in recording.keys():
                 recording[x].append(b'Stop')
@@ -624,15 +621,9 @@ class MultiUserChatWindow(QWidget):
                 mp3_thread = threading.Thread(target=self.wavToMp3)
                 mp3_thread.start()
                 self.music = not self.music'''
-
         if self.music:
             self.music = False
-            '''if self.music_person:
-                self.music_person = False
-                self.playback = False
-                asyncio.new_event_loop().run_until_complete(self.send_signal(b'music'))'''
-            #global stream_music
-            #stream_music.close()
+
 
     def listen(self, userid, roomid, x):
         loop = asyncio.new_event_loop().run_until_complete(self.receiveAudio(userid, roomid, x))
@@ -750,16 +741,8 @@ class MultiUserChatWindow(QWidget):
         audio_file = AudioSegment.from_mp3("temp.mp3")
         audio_file.export("temp.wav", format="wav")
         os.remove("temp.mp3")
-        #audio_file = wave.open("temp.wav", 'rb')
-        #global audio
-        #info = [audio.get_format_from_width(audio_file.getsampwidth()), audio_file.getnchannels(), audio_file.getframerate()]
-        #audio_file.close()
-        #return info
 
     def playMusic(self):
-        # please implement a button for start and stop
-        # for start, send music
-        # for stop, music.stop()
         global stream_music, recording
         audio_file = wave.open("temp.wav", 'rb')
         data = audio_file.readframes(CHUNK)
