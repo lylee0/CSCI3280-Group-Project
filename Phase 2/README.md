@@ -7,11 +7,11 @@
 - TAM Lee Yau 1155143460
 
 ### Install Required Packages
+- Please use Python 3.9 or above
 - threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
-'''shell
+```shell
 pip install PyAudio pygrabber sounddevice asyncio websockets sockets nest-asyncio PyQt5 pydub opencv-python numpy pillow mediapipe audio-separator
-'''
-
+```
 ### Path Setting 
 ```shell
 cd ./Phase 2
