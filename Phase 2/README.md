@@ -25,7 +25,7 @@ cd ./Phase 2
 python3 main.py
 ```
 - Input username
-- Wait until all users are online
+- Wait until all users are online, note that all users should be connected to the same network(same Wi-Fi)
 - Press enter
 - Select all users IP address
 - Click Continue
