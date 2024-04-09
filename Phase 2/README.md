@@ -6,6 +6,9 @@
 - NG Ka Pun 1155160398
 - TAM Lee Yau 1155143460
 
+### Required Packages
+- threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, time, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
+
 ### Path Setting 
 ```shell
 cd ./Phase 2
