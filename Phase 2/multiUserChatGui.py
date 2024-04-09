@@ -528,7 +528,7 @@ class MultiUserChatWindow(QWidget):
 
                     if (virtual_background != "none"):
 
-                        bg_img = cv2.imread("./icon/cu.jpg")
+                        bg_img = cv2.imread(virtual_background)
                         bg_img = cv2.resize(bg_img, (frame.shape[1], frame.shape[0]))
 
                         mp_selfie_segmentation = mediapipe.solutions.selfie_segmentation
