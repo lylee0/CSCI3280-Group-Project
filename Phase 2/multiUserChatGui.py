@@ -53,6 +53,8 @@ file_start_time = 0
 music_dict = 'songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
+virtual_background = "none"
+
 recording = {}
 mergeRecording = []
 class MemberListPopUp(QWidget):
@@ -193,6 +195,20 @@ class MultiUserChatWindow(QWidget):
         self.cameraDropdown.setCurrentIndex(0)
         deviceLayout.addWidget(self.cameraDropdown)
 
+        #virtual background
+        self.virtualBackgroundDropdown = QComboBox()
+        self.virtualBackgroundDropdown.setFixedWidth(200)
+        self.virtualBackgroundDropdown.setStyleSheet("QComboBox{font-size: 8pt;}")
+
+        virtualBackground = ["none", "cu"]
+        for x in virtualBackground:
+            self.virtualBackgroundDropdown.addItem(x)
+
+        self.virtualBackgroundDropdown.setCurrentIndex(0)
+        self.virtualBackgroundDropdown.activated[str].connect(self.virtualBackgroundFunction)
+        deviceLayout.addWidget(self.virtualBackgroundDropdown)
+
+
         functionBarLayout.addLayout(deviceLayout)
 
 
@@ -326,6 +342,17 @@ class MultiUserChatWindow(QWidget):
 
 
     #Function Bar Button Functions
+
+    def virtualBackgroundFunction(self, text):
+        global virtual_background
+        if (text == "none"):
+            virtual_background = "none"
+            
+        elif (text == "cu"):
+            virtual_background = "./icon/cu.jpg"
+
+        print(virtual_background)
+
 
     def MuteButtonFunction(self, event):
         self.mute = not self.mute
@@ -497,19 +524,23 @@ class MultiUserChatWindow(QWidget):
                     ret, frame = self.cam.read()
 
                     #virtual background
-                    bg_img = cv2.imread("./icon/cu.jpg")
-                    bg_img = cv2.resize(bg_img, (frame.shape[1], frame.shape[0]))
+                    global virtual_background
 
-                    mp_selfie_segmentation = mediapipe.solutions.selfie_segmentation
-                    selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation()
-                    result = selfie_segmentation.process(frame)
-                    segmentation_mask = result.segmentation_mask
+                    if (virtual_background != "none"):
 
-                    threshold = 0.1
-                    condition = np.stack((segmentation_mask, ) * 3, axis = -1) > threshold
-                    frame = np.where(condition, frame[:, :, ::-1], bg_img[:, :, ::-1])
+                        bg_img = cv2.imread("./icon/cu.jpg")
+                        bg_img = cv2.resize(bg_img, (frame.shape[1], frame.shape[0]))
 
-                    frame = frame[:, :, ::-1]
+                        mp_selfie_segmentation = mediapipe.solutions.selfie_segmentation
+                        selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation()
+                        result = selfie_segmentation.process(frame)
+                        segmentation_mask = result.segmentation_mask
+
+                        threshold = 0.1
+                        condition = np.stack((segmentation_mask, ) * 3, axis = -1) > threshold
+                        frame = np.where(condition, frame[:, :, ::-1], bg_img[:, :, ::-1])
+
+                        frame = frame[:, :, ::-1]
 
                     #end virtual background
 
