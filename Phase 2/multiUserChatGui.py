@@ -443,11 +443,51 @@ class MultiUserChatWindow(QWidget):
             asyncio.get_event_loop().run_until_complete(self.send_signal(b'Stop'))
     
     def VoiceChangeButtonFunction(self, event):
+        global voice_change
         self.voiceChange = not self.voiceChange
         if not self.voiceChange:
+            voice_change = 1
             self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_off.png").scaled(QSize(50, 50)))
         else:
             self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_on.png").scaled(QSize(50, 50)))
+
+            self.voice_choose_pop_up = QWidget()
+            self.voice_choose_pop_up.setWindowTitle("Choose Voice")
+
+            layout = QVBoxLayout()
+            layout.setAlignment(Qt.AlignTop)
+
+            all_voice = ["default", "man", "woman", "alien"]
+
+            for voice in all_voice:
+                nameLabel = QLabel()
+                nameLabel.setText(voice)
+                nameLabel.setStyleSheet("QLabel{font-size: 18pt;}")
+                nameLabel.mousePressEvent = partial(self.VoiceChooseFunction, voice)
+                nameLabel.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
+                layout.addWidget(nameLabel)
+
+            self.voice_choose_pop_up.setLayout(layout)
+
+            self.voice_choose_pop_up.show()
+
+    def VoiceChooseFunction(self, voice, event):
+        global voice_change
+        match voice:
+            case "man":
+                voice_change = 1.2
+            case "woman":
+                 voice_change = 0.8
+            case "alien":
+                 voice_change = 0.5
+            case _:
+                voice_change = 1
+
+        print(f"voice change: {voice_change}")
+        
+        self.voice_choose_pop_up.close()
+
+
 
     def EndChatButtonFunction(self, event):
         self.close()
@@ -744,8 +784,8 @@ class MultiUserChatWindow(QWidget):
                     mute = struct.unpack('>h', mute)[0]
                     if user != userid and roomid == room and mute == 0:
                         data = data[6:]
+                        global voice_change
                         if voice_change != 1:
-                            global voice_change
                             integer_data = np.frombuffer(data, dtype=np.int16)
                             pitch_shifted_data = np.array(integer_data, dtype=np.int16)
                             new_rate = int(RATE * voice_change)
