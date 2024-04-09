@@ -54,7 +54,7 @@ music_dict = 'songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
 virtual_background = "none"
-voice_change = 1
+voice_change = 1.2
 
 recording = {}
 mergeRecording = []
@@ -446,7 +446,7 @@ class MultiUserChatWindow(QWidget):
         global voice_change
         self.voiceChange = not self.voiceChange
         if not self.voiceChange:
-            voice_change = 1
+            voice_change = 1.2
             self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_off.png").scaled(QSize(50, 50)))
         else:
             self.voiceChangeButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/voice_change_on.png").scaled(QSize(50, 50)))
@@ -457,7 +457,7 @@ class MultiUserChatWindow(QWidget):
             layout = QVBoxLayout()
             layout.setAlignment(Qt.AlignTop)
 
-            all_voice = ["default", "man", "woman", "alien"]
+            all_voice = ["Man", "Woman", "Alien"]
 
             for voice in all_voice:
                 nameLabel = QLabel()
@@ -473,15 +473,12 @@ class MultiUserChatWindow(QWidget):
 
     def VoiceChooseFunction(self, voice, event):
         global voice_change
-        match voice:
-            case "man":
-                voice_change = 1.2
-            case "woman":
-                 voice_change = 0.8
-            case "alien":
-                 voice_change = 0.5
-            case _:
-                voice_change = 1
+        if voice == "Man":
+            voice_change = 1.2
+        elif voice == "Woman":
+            voice_change = 0.8
+        elif voice == "Alien":
+            voice_change = 0.5
 
         print(f"voice change: {voice_change}")
         
@@ -784,14 +781,6 @@ class MultiUserChatWindow(QWidget):
                     mute = struct.unpack('>h', mute)[0]
                     if user != userid and roomid == room and mute == 0:
                         data = data[6:]
-                        global voice_change
-                        if voice_change != 1:
-                            integer_data = np.frombuffer(data, dtype=np.int16)
-                            pitch_shifted_data = np.array(integer_data, dtype=np.int16)
-                            new_rate = int(RATE * voice_change)
-                            pitch_shifted_data = pitch_shifted_data.astype(np.float32)
-                            pitch_shifted_data = np.interp(np.arange(0, len(pitch_shifted_data), RATE/new_rate), np.arange(0, len(pitch_shifted_data)), pitch_shifted_data).astype(np.int16)
-                            data = pitch_shifted_data.tobytes()
                         stream_output.write(data)
                     '''if user == userid and roomid == room and mute == 0 and self.playback == True:
                             data = data[6:]
@@ -845,6 +834,14 @@ class MultiUserChatWindow(QWidget):
     def recordVoice(self):
         while self.online:
             data = stream_input.read(CHUNK)
+            global voice_change
+            if self.voiceChange:
+                integer_data = np.frombuffer(data, dtype=np.int16)
+                pitch_shifted_data = np.array(integer_data, dtype=np.int16)
+                new_rate = int(RATE * voice_change)
+                pitch_shifted_data = pitch_shifted_data.astype(np.float32)
+                pitch_shifted_data = np.interp(np.arange(0, len(pitch_shifted_data), RATE/new_rate), np.arange(0, len(pitch_shifted_data)), pitch_shifted_data).astype(np.int16)
+                data = pitch_shifted_data.tobytes()
             yield data
 
     async def sendAudio(self, userid, roomid):
