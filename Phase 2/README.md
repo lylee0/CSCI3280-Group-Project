@@ -6,8 +6,11 @@
 - NG Ka Pun 1155160398
 - TAM Lee Yau 1155143460
 
-### Required Packages
-- threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, time, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
+### Install Required Packages
+- threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
+'''shell
+pip install PyAudio pygrabber sounddevice asyncio websockets sockets nest-asyncio PyQt5 pydub opencv-python numpy pillow mediapipe audio-separator
+'''
 
 ### Path Setting 
 ```shell
