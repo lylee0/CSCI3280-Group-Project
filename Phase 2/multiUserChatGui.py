@@ -54,6 +54,7 @@ music_dict = 'songs'
 music_path = './songs/RedSun_(Instrumental).mp3'
 
 virtual_background = "none"
+voice_change = 1
 
 recording = {}
 mergeRecording = []
@@ -743,6 +744,14 @@ class MultiUserChatWindow(QWidget):
                     mute = struct.unpack('>h', mute)[0]
                     if user != userid and roomid == room and mute == 0:
                         data = data[6:]
+                        if voice_change != 1:
+                            global voice_change
+                            integer_data = np.frombuffer(data, dtype=np.int16)
+                            pitch_shifted_data = np.array(integer_data, dtype=np.int16)
+                            new_rate = int(RATE * voice_change)
+                            pitch_shifted_data = pitch_shifted_data.astype(np.float32)
+                            pitch_shifted_data = np.interp(np.arange(0, len(pitch_shifted_data), RATE/new_rate), np.arange(0, len(pitch_shifted_data)), pitch_shifted_data).astype(np.int16)
+                            data = pitch_shifted_data.tobytes()
                         stream_output.write(data)
                     '''if user == userid and roomid == room and mute == 0 and self.playback == True:
                             data = data[6:]
