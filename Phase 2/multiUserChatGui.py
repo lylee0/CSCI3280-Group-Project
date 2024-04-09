@@ -232,9 +232,9 @@ class MultiUserChatWindow(QWidget):
         self.videoButton = QLabel()
         self.videoButton.setGeometry(0, 0, 0, 0)
         if not self.video:
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
-        else:
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
+        else:
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
         self.videoButton.setFixedSize(100,100)
         self.videoButton.mousePressEvent = self.VideoButtonFunction
         self.videoButton.setCursor(QtC.Qt.CursorShape.PointingHandCursor)
@@ -369,9 +369,9 @@ class MultiUserChatWindow(QWidget):
             self.chatRoomButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/share.png").scaled(QSize(50, 50)))
         self.video = not self.video
         if (self.video):
-            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
-        else:
             self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/video.png").scaled(QSize(50, 50)))
+        else:
+            self.videoButton.setPixmap(QPixmap(os.path.dirname(os.path.abspath(__file__)) + "/icon/no_video.png").scaled(QSize(50, 50)))
 
     def MemberListButtonFunction(self, event):
         
