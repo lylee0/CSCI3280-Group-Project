@@ -8,15 +8,17 @@
 
 ### Install Required Packages
 - Please use Python 3.9 or above
-- threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
+- Install threading, os, time, pyaudio, pygrabber, sounddevice, asyncio, websockets, json, socket, nest_asyncio, PyQt5, datetime, platform, sys, pydub, struct, wave, cv2, numpy, PIL, mediapipe, functools, audio_separator
 ```shell
 pip install PyAudio pygrabber sounddevice asyncio websockets sockets nest-asyncio PyQt5 pydub opencv-python numpy pillow mediapipe audio-separator
 ```
-### Path Setting 
+### Path Setting
+- Set the path to be the path of the source codes
 ```shell
 cd ./Phase 2
 ```
 ### Run Program
+- Run main.py
 ```shell
 python3 main.py
 ```
