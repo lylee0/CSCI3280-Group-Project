@@ -1,10 +1,5 @@
 # CSCI3280-Group-Project
 ## Peer-to-Peer Voice Chat System
-### Group 7
-- LEE Lai Yan 1155158772
-- LEE Ho Kan 1155157376
-- NG Ka Pun 1155160398
-- TAM Lee Yau 1155143460
 
 ### Install Required Packages
 - Please use Python 3.9 or above
